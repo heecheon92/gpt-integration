@@ -1,0 +1,8 @@
+{
+  "tailwindConfig": "./tailwind.config.ts",
+  "plugins": [
+    "prettier-plugin-organize-imports",
+    "prettier-plugin-tailwindcss"
+  ],
+  "singleQuote": false
+}
