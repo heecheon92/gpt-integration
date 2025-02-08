@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// @model Note
+// @description Defines a data model (or collection) named "Note".
+//              This model represents an entity (object) that will be stored in the database.
+model Note {
+  // @field id
+  // @type String
+  // @description Defines a field named "id" with the type specified as String in the Prisma schema.
+  //              Although in MongoDB this value is stored as an ObjectId, it is represented as a string here.
+  // Directives:
+  // @directive @id               - Specifies that this field is the primary key of the model.
+  // @directive @default(auto())  - Automatically generates a default value (a unique ObjectId in MongoDB) when a new record is created.
+  // @directive @map("_id")       - Maps the Prisma field 'id' to the MongoDB '_id' field.
+  // @directive @db.ObjectId      - Indicates that this field is stored as a MongoDB ObjectId type.
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String?
+  userId    String
+  // Field: createdAt
+  // @default(now())
+  // Meaning: Sets a default value for the "createdAt" field.
+  // Explanation: When a new record is created, if no value is provided for "createdAt",
+  //              Prisma will automatically set it to the current timestamp using the now() function.
+  createdAt DateTime @default(now())
+
+  // Field: updatedAt
+  // @updatedAt
+  // Meaning: Automatically updates the "updatedAt" field.
+  // Explanation: Every time the record is updated, Prisma will automatically update this field
+  //              with the current timestamp.
+  updatedAt DateTime @updatedAt
+
+  // Model-level attribute: @@map("notes")
+  // @@map("notes")
+  // Meaning: Maps the Prisma model to the actual database collection or table name "notes".
+  // Explanation: Even if your model is named differently in the Prisma schema, this attribute tells
+  //              Prisma to use "notes" as the name of the collection/table in the database.
+  @@map("notes")
+}
