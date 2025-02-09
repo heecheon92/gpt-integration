@@ -14,7 +14,7 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript", "prettier"),
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,jsx,tsx}"],
     languageOptions: {
@@ -95,6 +95,7 @@ const eslintConfig = [
       "**/page.{jsx,tsx}",
       "**/template.{jsx,tsx}",
       "**/unauthorized.{jsx,tsx}",
+      "**/middleware.{js,ts}",
     ],
     rules: {
       "import/no-default-export": "off",

@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "npm run lint && NODE_OPTIONS='--inspect' next dev",
+    "dev:turbo": "npm run lint && NODE_OPTIONS='--inspect' next dev --turbopack",
+    "dev:secure": "npm run lint && NODE_OPTIONS='--inspect' next dev --experimental-https",
+    "dev:turbo:secure": "npm run lint && NODE_OPTIONS='--inspect' next dev --experimental-https",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
