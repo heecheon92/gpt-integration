@@ -124,7 +124,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     const deletedNote = await prisma.$transaction(async (tx) => {
-      const deletedNote = await prisma.note.delete({
+      const deletedNote = await tx.note.delete({
         where: { id },
       });
       try {
