@@ -28,6 +28,7 @@ export default function RootLayout({
   return (
     <ClerkProvider afterSignOutUrl={"/"}>
       <html
+        suppressHydrationWarning
         lang="en"
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
