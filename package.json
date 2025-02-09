@@ -7,9 +7,10 @@
     "dev:turbo": "npm run lint && NODE_OPTIONS='--inspect' next dev --turbopack",
     "dev:secure": "npm run lint && NODE_OPTIONS='--inspect' next dev --experimental-https",
     "dev:turbo:secure": "npm run lint && NODE_OPTIONS='--inspect' next dev --experimental-https",
-    "build": "next build",
+    "build": "npx prisma generate && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.1.9",
