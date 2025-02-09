@@ -1,3 +1,8 @@
+/**
+ * This file contains the code to generate embeddings using the OpenAI API.
+ * For general purpose openai operation, use one from the `ai` package.
+ */
+
 import OpenAI from "openai";
 
 const apiKey = process.env.OPENAI_API_KEY;
@@ -6,7 +11,7 @@ if (!apiKey) {
   throw new Error("OPENAI_API_KEY is required");
 }
 
-export const openai = new OpenAI({ apiKey });
+const openai = new OpenAI({ apiKey });
 
 export async function getEmbedding(text: string) {
   const response = await openai.embeddings.create({

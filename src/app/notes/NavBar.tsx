@@ -1,6 +1,7 @@
 "use client";
 import logo from "@/assets/logo.png";
 import { AddEditNoteDialog } from "@/components/AddEditNoteDialog";
+import { AIChatButton } from "@/components/AIChatButton";
 import { ThemeToggleButton } from "@/components/ThemeToggleButton";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@clerk/nextjs";
@@ -35,6 +36,7 @@ export function NavBar() {
             <Button onClick={() => setShowAddEditNoteDialog(true)}>
               <Plus size={20} className="mr-2" /> Add Note
             </Button>
+            <AIChatButton />
           </div>
         </div>
       </div>
