@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     const vectorQueryResponse = await gptIndex.query({
       vector: embedding,
-      topK: 1,
+      topK: 6,
       filter: { userId },
     });
 
