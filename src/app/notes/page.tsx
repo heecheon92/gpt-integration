@@ -7,6 +7,14 @@ export default async function NotePages() {
 
   if (!userId) throw Error("userId undefined");
 
+  console.log("user is authorized trying to run prisma query");
+
+  try {
+    await prisma.note.findMany({ where: { userId } });
+  } catch (error) {
+    console.error(error);
+  }
+
   const allNotes = await prisma.note.findMany({ where: { userId } });
 
   return (
