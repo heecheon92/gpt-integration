@@ -41,7 +41,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
     <div
       className={cn(
         "bottom-0 right-0 z-10 w-full max-w-[500px] p-1 xl:right-36",
-        open ? "absolute" : "hidden",
+        open ? "fixed" : "hidden",
       )}
     >
       <button onClick={onClose} className="mb-1 ms-auto block">
