@@ -51,3 +51,15 @@ model Note {
   //              Prisma to use "notes" as the name of the collection/table in the database.
   @@map("notes")
 }
+
+model SalesRecord {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String
+  productName String
+  amount    Float
+  soldAt    DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("sales_records")
+}
