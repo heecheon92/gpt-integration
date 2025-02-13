@@ -31,31 +31,44 @@ import { Textarea } from "./ui/textarea";
 type AddSalesRecordDialogProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  recordToDelete?: SalesRecord;
+  recordToEdit?: SalesRecord;
 };
 
 export function AddSalesRecordDialog({
   open,
   setOpen,
-  recordToDelete,
+  recordToEdit,
 }: AddSalesRecordDialogProps) {
   const [deleteInProgress, setDeleteInProgress] = useState(false);
   const router = useRouter();
   const form = useForm<CreateRecordSchema>({
     resolver: zodResolver(createRecordSchema),
     defaultValues: {
-      productName: recordToDelete?.productName ?? "",
-      price: recordToDelete?.amount ?? 0,
-      soldAt: recordToDelete?.soldAt
-        ? new Date(recordToDelete.soldAt).toISOString().slice(0, 16)
+      productName: recordToEdit?.productName ?? "",
+      price: recordToEdit?.amount ?? 0,
+      soldAt: recordToEdit?.soldAt
+        ? new Date(recordToEdit.soldAt).toISOString().slice(0, 16)
         : new Date().toISOString().slice(0, 16),
     },
   });
 
   async function onSubmit(input: CreateRecordSchema) {
     try {
-      if (recordToDelete) return;
-      else {
+      if (recordToEdit) {
+        const response = await fetch(`/api/sales`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: recordToEdit.id,
+            ...input,
+          }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to update note.");
+        }
+      } else {
         const response = await fetch("/api/sales", {
           method: "POST",
           headers: {
@@ -78,12 +91,12 @@ export function AddSalesRecordDialog({
   }
 
   async function deleteRecord() {
-    if (!recordToDelete) return;
+    if (!recordToEdit) return;
     setDeleteInProgress(true);
     try {
       const response = await fetch(`/api/sales`, {
         method: "DELETE",
-        body: JSON.stringify({ id: recordToDelete.id }),
+        body: JSON.stringify({ id: recordToEdit.id }),
       });
       if (!response.ok) throw new Error("Failed to delete note.");
       router.refresh();
@@ -98,7 +111,7 @@ export function AddSalesRecordDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{recordToDelete ? "Edit Note" : "Add Note"}</DialogTitle>
+          <DialogTitle>{recordToEdit ? "Edit Note" : "Add Note"}</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
@@ -115,7 +128,6 @@ export function AddSalesRecordDialog({
                   <FormMessage />
                 </FormItem>
               )}
-              disabled={!!recordToDelete}
             />
 
             <FormField
@@ -130,7 +142,6 @@ export function AddSalesRecordDialog({
                   <FormMessage />
                 </FormItem>
               )}
-              disabled={!!recordToDelete}
             />
 
             <FormField
@@ -145,11 +156,10 @@ export function AddSalesRecordDialog({
                   <FormMessage />
                 </FormItem>
               )}
-              disabled={!!recordToDelete}
             />
 
             <DialogFooter className="gap-1 sm:gap-0">
-              {recordToDelete && (
+              {recordToEdit && (
                 <LoadingButton
                   type="button"
                   variant={"destructive"}

@@ -1,9 +1,14 @@
+import {
+  EMBEDDING_FILTER_TAG_KEY,
+  EMBEDDING_SALES_FILTER_TAG,
+} from "@/constants";
 import { gptIndex } from "@/lib/db/pinecone";
 import { prisma } from "@/lib/db/prisma";
 import { getEmbedding } from "@/lib/openai";
 import {
   createRecordSchema,
   deleteRecordSchema,
+  updateRecordSchema,
 } from "@/lib/validation/record";
 
 import { auth } from "@clerk/nextjs/server";
@@ -43,7 +48,13 @@ export async function POST(req: NextRequest) {
         {
           id: record.id,
           values: embedding,
-          metadata: { userId, productName, price, soldAt },
+          metadata: {
+            userId,
+            productName,
+            price,
+            soldAt,
+            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_SALES_FILTER_TAG,
+          },
         },
       ]);
 
@@ -51,6 +62,57 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json(record, { status: 201 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "An error occurred" }, { status: 500 });
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const parseResult = updateRecordSchema.safeParse(body);
+    if (!parseResult.success) {
+      console.error(parseResult.error);
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+    }
+
+    const { id, productName, price, soldAt } = parseResult.data;
+
+    const record = await prisma.salesRecord.findUnique({ where: { id } });
+    if (!record) {
+      return NextResponse.json({ error: "Record not found" }, { status: 404 });
+    }
+    const { userId } = await auth();
+
+    if (!userId || userId !== record.userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const embedding = await getEmbeddingForRecord(productName, price, soldAt);
+    const updatedRecord = await prisma.$transaction(async (tx) => {
+      const updatedRecord = await tx.salesRecord.update({
+        where: { id },
+        data: {
+          productName,
+          amount: price,
+          soldAt: new Date(soldAt),
+          userId,
+        },
+      });
+      await gptIndex.upsert([
+        {
+          id: updatedRecord.id,
+          values: embedding,
+          metadata: {
+            userId,
+            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_SALES_FILTER_TAG,
+          },
+        },
+      ]);
+      return updatedRecord;
+    });
+    return NextResponse.json(updatedRecord, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });

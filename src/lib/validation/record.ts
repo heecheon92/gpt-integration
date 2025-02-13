@@ -17,10 +17,13 @@ export const createRecordSchema = z.object({
     return val;
   }, z.string()),
 });
-
+export const updateRecordSchema = createRecordSchema.extend({
+  id: z.string().min(1),
+});
 export const deleteRecordSchema = z.object({
   id: z.string().min(1),
 });
 
 export type CreateRecordSchema = z.infer<typeof createRecordSchema>;
+export type UpdateRecordSchema = z.infer<typeof updateRecordSchema>;
 export type DeleteRecordSchema = z.infer<typeof deleteRecordSchema>;

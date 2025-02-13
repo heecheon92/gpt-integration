@@ -1,3 +1,7 @@
+import {
+  EMBEDDING_FILTER_TAG_KEY,
+  EMBEDDING_NOTES_FILTER_TAG,
+} from "@/constants";
 import { gptIndex } from "@/lib/db/pinecone";
 import { prisma } from "@/lib/db/prisma";
 import { getEmbedding } from "@/lib/openai";
@@ -42,7 +46,10 @@ export async function POST(req: NextRequest) {
         {
           id: note.id,
           values: embedding,
-          metadata: { userId },
+          metadata: {
+            userId,
+            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
+          },
         },
       ]);
 
@@ -90,7 +97,10 @@ export async function PUT(req: NextRequest) {
         {
           id: updatedNote.id,
           values: embedding,
-          metadata: { userId },
+          metadata: {
+            userId,
+            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
+          },
         },
       ]);
       return updatedNote;

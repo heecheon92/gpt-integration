@@ -4,8 +4,14 @@ import { getEmbedding } from "@/lib/openai";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
+import {
+  EMBEDDING_FILTER_TAG_KEY,
+  EMBEDDING_GENERAL_FILTER_TAG,
+  EMBEDDING_NOTES_FILTER_TAG,
+  EMBEDDING_SALES_FILTER_TAG,
+} from "@/constants";
 import { openai } from "@ai-sdk/openai";
-import { CoreMessage, streamText } from "ai";
+import { CoreMessage, generateObject, streamText } from "ai";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,27 +28,57 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { object: embeddingFilterTag } = await generateObject({
+      model: openai("gpt-4o"),
+      output: "enum",
+      enum: [
+        EMBEDDING_NOTES_FILTER_TAG,
+        EMBEDDING_SALES_FILTER_TAG,
+        EMBEDDING_GENERAL_FILTER_TAG,
+      ],
+      prompt:
+        `Classify if the user is asking about sales or note he or she has written.\n` +
+        `If you think user's query is not sales related, assume that it is likely to be note related.\n` +
+        `If you think user's query is too broad, assume that it is general question.\n` +
+        `User's query is as follow:\n` +
+        `${messages[messages.length - 1].content}`,
+    });
+
+    console.log("query classification result: ", embeddingFilterTag);
+
+    const queryFilter =
+      embeddingFilterTag === EMBEDDING_GENERAL_FILTER_TAG
+        ? { userId }
+        : { userId, [EMBEDDING_FILTER_TAG_KEY]: embeddingFilterTag };
     const vectorQueryResponse = await gptIndex.query({
       vector: embedding,
       topK: 20,
-      filter: { userId },
+      filter: queryFilter,
     });
 
-    const relevantNotes = await prisma.note.findMany({
-      where: {
-        id: {
-          in: vectorQueryResponse.matches.map((match) => match.id),
-        },
-      },
-    });
+    const relevantNotes =
+      embeddingFilterTag === EMBEDDING_GENERAL_FILTER_TAG ||
+      embeddingFilterTag === EMBEDDING_NOTES_FILTER_TAG
+        ? await prisma.note.findMany({
+            where: {
+              id: {
+                in: vectorQueryResponse.matches.map((match) => match.id),
+              },
+            },
+          })
+        : [];
 
-    const relevantRecords = await prisma.salesRecord.findMany({
-      where: {
-        id: {
-          in: vectorQueryResponse.matches.map((match) => match.id),
-        },
-      },
-    });
+    const relevantRecords =
+      embeddingFilterTag === EMBEDDING_GENERAL_FILTER_TAG ||
+      embeddingFilterTag === EMBEDDING_SALES_FILTER_TAG
+        ? await prisma.salesRecord.findMany({
+            where: {
+              id: {
+                in: vectorQueryResponse.matches.map((match) => match.id),
+              },
+            },
+          })
+        : [];
 
     console.log("Relevant notes found: ", relevantNotes);
     console.log("Relevant records found: ", relevantRecords);

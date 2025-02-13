@@ -43,7 +43,7 @@ export function Record({ record }: RecordProps) {
       <AddSalesRecordDialog
         open={showDeleteDialog}
         setOpen={setShowDeleteDialog}
-        recordToDelete={record}
+        recordToEdit={record}
       />
     </>
   );
