@@ -28,9 +28,11 @@ export function Record({ record }: RecordProps) {
       >
         <CardHeader>
           <CardTitle>{record.productName}</CardTitle>
-          <CardDescription>
-            {createdUpdatedAtTimestamp}
-            {wasUpdated && " (updated)"}
+          <CardDescription className="flex flex-col space-y-2">
+            <span>{`written at: ${createdUpdatedAtTimestamp}`}</span>
+            <span className="font-extrabold text-blue-600">
+              {`sold at: ${new Date(record.soldAt).toLocaleDateString()}`}
+            </span>
           </CardDescription>
         </CardHeader>
 
