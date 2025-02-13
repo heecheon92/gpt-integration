@@ -1,10 +1,10 @@
 import { Metadata } from "next";
-import { NavBar } from "./NavBar";
+import { NavBar } from "./components/NavBar";
 
 export const metadata: Metadata = {
-  title: "FlowBrain - Notes",
+  title: "FlowBrain - Services",
 };
-export default async function NotesLayout({
+export default async function ServicesLayout({
   children,
 }: {
   children: React.ReactNode;

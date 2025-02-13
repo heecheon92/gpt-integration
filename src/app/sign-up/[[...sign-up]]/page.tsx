@@ -7,7 +7,7 @@ export default function SignUpPage() {
     <div className="flex h-screen items-center justify-center">
       <SignUp
         appearance={{ variables: { colorPrimary: "#0F172A" } }}
-        fallbackRedirectUrl={"/notes"}
+        fallbackRedirectUrl={"/services/notes"}
       />
     </div>
   );

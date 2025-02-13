@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
 
     const vectorQueryResponse = await gptIndex.query({
       vector: embedding,
-      topK: 6,
+      topK: 20,
       filter: { userId },
     });
 
@@ -36,7 +36,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const relevantRecords = await prisma.salesRecord.findMany({
+      where: {
+        id: {
+          in: vectorQueryResponse.matches.map((match) => match.id),
+        },
+      },
+    });
+
     console.log("Relevant notes found: ", relevantNotes);
+    console.log("Relevant records found: ", relevantRecords);
 
     const systemMessage: CoreMessage = {
       role: "system",
@@ -46,7 +55,15 @@ export async function POST(req: NextRequest) {
         relevantNotes
           .map((note) => `Title: ${note.title}\n\nContent: ${note.content}`)
           .join("\n\n") +
-        "Oh and make sure that you respond to the user with the corresponding language of the content.",
+        "By the way, some users may ask about revenues on products they sold\n" +
+        "The relevant sales records for this query are:\n" +
+        relevantRecords
+          .map(
+            (record) =>
+              `Product Name: ${record.productName}\n\nPrice: ${record.amount}\n\nSold At: ${record.soldAt}`,
+          )
+          .join("\n\n") +
+        "Make sure that you respond to the user with the corresponding language of the content.",
     };
 
     // below is deprecated due to the new streamText function

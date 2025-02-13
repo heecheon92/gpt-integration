@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 export default async function Home() {
   const { userId } = await auth();
 
-  if (userId) redirect("/notes");
+  if (userId) redirect("/services/notes");
 
   return (
     <main className="flex h-screen flex-col items-center justify-center gap-5">
@@ -23,7 +23,7 @@ export default async function Home() {
         Pinecone, Next.js, Shadcn UI, Clerk, and more.
       </p>
       <Button size="lg" asChild>
-        <Link href="/notes">Open</Link>
+        <Link href="/services/notes">Open</Link>
       </Button>
     </main>
   );
