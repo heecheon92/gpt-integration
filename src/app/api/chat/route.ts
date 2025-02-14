@@ -145,6 +145,8 @@ function handleCreateNoteRequest({
     prompt:
       `This is a system message to ask you to create a response message for the user's query.\n` +
       `I am providing the way to create a user's note. Once it is done, respond to the user.\n ` +
+      `Do not create the note if the user's query does not include any title or content.\n` +
+      `Let the user know if the user's query does not include any title or content.\n` +
       `Make sure that you respond to the user with the corresponding language of the content.\n` +
       `User's query is as follow:\n` +
       `${messages[messages.length - 1].content}\n`,
