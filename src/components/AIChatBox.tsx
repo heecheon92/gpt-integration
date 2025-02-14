@@ -1,12 +1,12 @@
 "use client";
-import { cn } from "@/lib/utils";
+import { cn, debounce } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
 import { Message, useChat } from "ai/react";
 import { Bot, Trash, UserRound, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Textarea } from "./ui/textarea";
 
 type AIChatBoxProps = {
   open: boolean;
@@ -36,7 +36,8 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
     },
   });
 
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -77,24 +78,40 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
             />
           )}
         </div>
-        <form onSubmit={handleSubmit} className="m-3 flex gap-2">
-          <Button
-            title="Clear chat"
-            variant="outline"
-            size="icon"
-            className="shrink-0"
-            type="button"
-            onClick={() => setMessages([])}
-          >
-            <Trash />
-          </Button>
-          <Input
+        <form
+          className="m-3 flex flex-col gap-2"
+          ref={formRef}
+          id="chat-form"
+          onSubmit={(e) => e.preventDefault()}
+        >
+          <Textarea
             ref={inputRef}
             value={input}
             onChange={handleInputChange}
+            onKeyUp={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                debounce(() => {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }, 100)();
+              }
+            }}
             placeholder="Type a message..."
+            form="chat-form"
           />
-          <Button type="submit">Send</Button>
+          <div className="flex flex-row items-center justify-between">
+            <Button
+              title="Clear chat"
+              variant="outline"
+              size="icon"
+              className="shrink-0"
+              type="button"
+              onClick={() => setMessages([])}
+            >
+              <Trash />
+            </Button>
+            {/* <Button type="submit">Send</Button> */}
+          </div>
         </form>
       </div>
     </div>
