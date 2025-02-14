@@ -1,10 +1,10 @@
 "use client";
-import { cn, debounce } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
 import { Message, useChat } from "ai/react";
 import { Bot, Trash, UserRound, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 
@@ -31,8 +31,12 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
         message.parts &&
         message.parts.length > 0 &&
         message.parts.some((part) => part.type === "tool-invocation")
-      )
+      ) {
+        console.log(
+          "There was a tool-invocation part in the message, refreshing the page",
+        );
         router.refresh();
+      }
     },
   });
 
@@ -40,6 +44,9 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const handleEnterKey = useDebounceCallback(() => {
+    formRef.current?.requestSubmit();
+  }, 100);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -82,18 +89,19 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
           className="m-3 flex flex-col gap-2"
           ref={formRef}
           id="chat-form"
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={handleSubmit}
         >
           <Textarea
             ref={inputRef}
             value={input}
             onChange={handleInputChange}
-            onKeyUp={(e) => {
+            onKeyDown={(e: KeyboardEvent) => {
               if (e.key === "Enter" && !e.shiftKey) {
-                debounce(() => {
+                if (formRef.current) {
+                  console.log("onKeyDown called");
                   e.preventDefault();
-                  handleSubmit(e);
-                }, 100)();
+                  handleEnterKey();
+                }
               }
             }}
             placeholder="Type a message..."
@@ -110,7 +118,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
             >
               <Trash />
             </Button>
-            {/* <Button type="submit">Send</Button> */}
+            <Button type="submit">Send</Button>
           </div>
         </form>
       </div>
@@ -147,4 +155,33 @@ function ChatMessage({
       )}
     </div>
   );
+}
+
+function useDebounceCallback<T extends (...args: any[]) => void>(
+  callback: T,
+  delay: number,
+): (...args: Parameters<T>) => void {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const debouncedCallback = useCallback(
+    (...args: Parameters<T>) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay],
+  );
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return debouncedCallback;
 }
