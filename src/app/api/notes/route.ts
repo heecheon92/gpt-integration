@@ -1,10 +1,5 @@
-import {
-  EMBEDDING_FILTER_TAG_KEY,
-  EMBEDDING_NOTES_FILTER_TAG,
-} from "@/constants";
 import { gptIndex } from "@/lib/db/pinecone";
 import { prisma } from "@/lib/db/prisma";
-import { getEmbedding } from "@/lib/openai";
 import {
   createNoteSchema,
   deleteNoteSchema,
@@ -12,6 +7,7 @@ import {
 } from "@/lib/validation/note";
 import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
+import { createNote, updateNote } from "./util";
 
 export async function POST(req: NextRequest) {
   try {
@@ -30,31 +26,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const embedding = await getEmbeddingForNote(title, content);
-
-    // if any error occurs in $transaction block will rollback the transaction
-    const note = await prisma.$transaction(async (tx) => {
-      const note = await tx.note.create({
-        data: {
-          title,
-          content,
-          userId,
-        },
-      });
-
-      await gptIndex.upsert([
-        {
-          id: note.id,
-          values: embedding,
-          metadata: {
-            userId,
-            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
-          },
-        },
-      ]);
-
-      return note;
-    });
+    const note = await createNote({ userId, title, content });
 
     return NextResponse.json(note, { status: 201 });
   } catch (error) {
@@ -84,26 +56,11 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const embedding = await getEmbeddingForNote(title, content);
-    const updatedNote = await prisma.$transaction(async (tx) => {
-      const updatedNote = await tx.note.update({
-        where: { id },
-        data: {
-          title,
-          content,
-        },
-      });
-      await gptIndex.upsert([
-        {
-          id: updatedNote.id,
-          values: embedding,
-          metadata: {
-            userId,
-            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
-          },
-        },
-      ]);
-      return updatedNote;
+    const updatedNote = await updateNote({
+      noteId: id,
+      title,
+      content,
+      userId,
     });
     return NextResponse.json(updatedNote, { status: 200 });
   } catch (error) {
@@ -149,8 +106,4 @@ export async function DELETE(req: NextRequest) {
     console.error(error);
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });
   }
-}
-
-async function getEmbeddingForNote(title: string, content: string | undefined) {
-  return getEmbedding(title + "\n\n" + (content ?? ""));
 }

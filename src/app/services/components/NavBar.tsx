@@ -11,13 +11,14 @@ import { Plus } from "lucide-react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
-import { useSelectedLayoutSegment } from "next/navigation";
+import { useRouter, useSelectedLayoutSegment } from "next/navigation";
 import { useState } from "react";
 
 export function NavBar() {
   const { theme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
   const segment = useSelectedLayoutSegment();
+  const router = useRouter();
 
   return (
     <>
@@ -47,6 +48,9 @@ export function NavBar() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button className="bg-emerald-400" onClick={() => router.refresh()}>
+              Refresh
+            </Button>
             <UserButton
               appearance={{
                 baseTheme: theme === "dark" ? dark : undefined,

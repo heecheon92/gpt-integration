@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
 import { Message, useChat } from "ai/react";
 import { Bot, Trash, UserRound, XCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -19,10 +20,25 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
     handleSubmit,
     setMessages,
     isLoading,
-  } = useChat();
+  } = useChat({
+    onFinish: (message) => {
+      console.log(
+        "useChat onFinish message: ",
+        JSON.stringify(message, null, 2),
+      );
+
+      if (
+        message.parts &&
+        message.parts.length > 0 &&
+        message.parts.some((part) => part.type === "tool-invocation")
+      )
+        router.refresh();
+    },
+  });
 
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (scrollRef.current) {

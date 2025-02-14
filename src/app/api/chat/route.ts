@@ -5,13 +5,17 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+  EMBEDDING_CREATE_NOTE_ACTION_TAG,
+  EMBEDDING_CREATE_RECORD_ACTION_TAG,
   EMBEDDING_FILTER_TAG_KEY,
   EMBEDDING_GENERAL_FILTER_TAG,
   EMBEDDING_NOTES_FILTER_TAG,
   EMBEDDING_SALES_FILTER_TAG,
 } from "@/constants";
 import { openai } from "@ai-sdk/openai";
-import { CoreMessage, generateObject, streamText } from "ai";
+import { CoreMessage, generateObject, streamText, tool } from "ai";
+import { z } from "zod";
+import { createNote } from "../notes/util";
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,16 +39,21 @@ export async function POST(req: NextRequest) {
         EMBEDDING_NOTES_FILTER_TAG,
         EMBEDDING_SALES_FILTER_TAG,
         EMBEDDING_GENERAL_FILTER_TAG,
+        EMBEDDING_CREATE_NOTE_ACTION_TAG,
+        EMBEDDING_CREATE_RECORD_ACTION_TAG,
       ],
       prompt:
-        `Classify if the user is asking about sales or note he or she has written.\n` +
-        `If you think user's query is not sales related, assume that it is likely to be note related.\n` +
-        `If you think user's query is too broad, assume that it is general question.\n` +
+        `Classify the user's query.\n` +
         `User's query is as follow:\n` +
         `${messages[messages.length - 1].content}`,
     });
 
     console.log("query classification result: ", embeddingFilterTag);
+
+    if (embeddingFilterTag === EMBEDDING_CREATE_NOTE_ACTION_TAG)
+      return handleCreateNoteRequest({ messages, userId });
+    if (embeddingFilterTag === EMBEDDING_CREATE_RECORD_ACTION_TAG)
+      return handleCreateSalesRecordRequest({ messages, userId });
 
     const queryFilter =
       embeddingFilterTag === EMBEDDING_GENERAL_FILTER_TAG
@@ -122,4 +131,66 @@ export async function POST(req: NextRequest) {
     console.error(error);
     return NextResponse.json({ error: "An error occurred" }, { status: 500 });
   }
+}
+
+function handleCreateNoteRequest({
+  messages,
+  userId,
+}: {
+  messages: CoreMessage[];
+  userId: string;
+}) {
+  const result = streamText({
+    model: openai("gpt-4o"),
+    prompt:
+      `This is a system message to ask you to create a response message for the user's query.\n` +
+      `I am providing the way to create a user's note. Once it is done, respond to the user.\n ` +
+      `Make sure that you respond to the user with the corresponding language of the content.\n` +
+      `User's query is as follow:\n` +
+      `${messages[messages.length - 1].content}\n`,
+    tools: {
+      makeNote: tool({
+        description:
+          "Create a note based on user's request and let the user know if the user's query does not include any title or content",
+        parameters: z.object({
+          title: z.string(),
+          content: z.string(),
+        }),
+        execute: async ({ title, content }) => {
+          try {
+            const note = await createNote({ userId, title, content });
+            return `Note created successfully with title: ${note.title} and content: ${note.content}`;
+          } catch (error) {
+            console.error(error);
+            return "An error occurred while creating the note. Please try again.";
+          }
+        },
+      }),
+    },
+    maxSteps: 5,
+  });
+
+  return result.toDataStreamResponse();
+}
+
+function handleCreateSalesRecordRequest({
+  messages,
+  userId: _,
+}: {
+  messages: CoreMessage[];
+  userId: string;
+}) {
+  const result = streamText({
+    model: openai("gpt-4o"),
+    prompt:
+      `This is a system message to ask you to create a response message for the user's query.\n` +
+      `This is likely that the user wants to create a sales record.\n ` +
+      `However, creating a sales record via AI is not supported yet.\n` +
+      `Please respond to the user accordingly.\n` +
+      `Make sure that you respond to the user with the corresponding language of the content.\n` +
+      `User's query is as follow:\n` +
+      `${messages[messages.length - 1].content}\n`,
+  });
+
+  return result.toDataStreamResponse();
 }
