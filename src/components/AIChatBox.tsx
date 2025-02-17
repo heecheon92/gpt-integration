@@ -63,6 +63,9 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
   useEffect(() => {
     if (open) {
       inputRef.current?.focus();
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
     }
   }, [open]);
 
