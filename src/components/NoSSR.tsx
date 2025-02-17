@@ -1,10 +1,16 @@
 import dynamic from "next/dynamic";
 import React from "react";
 
-function NoSsr({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
-
-export default dynamic(() => Promise.resolve(NoSsr), {
-  ssr: false,
-});
+export const NoSSR = dynamic(
+  () =>
+    Promise.resolve(function NoSsr({
+      children,
+    }: {
+      children: React.ReactNode;
+    }) {
+      return <>{children}</>;
+    }),
+  {
+    ssr: false,
+  },
+);

@@ -2,7 +2,7 @@
 import { SalesRecord } from "@prisma/client";
 import { useState } from "react";
 import { AddSalesRecordDialog } from "./AddSalesRecordDialog";
-import NoSSR from "./NoSSR";
+import { NoSSR } from "./NoSSR";
 import {
   Card,
   CardContent,
