@@ -68,6 +68,14 @@ export function salesTools({
                       }
                     : undefined,
                 },
+                {
+                  soldAt: daterange
+                    ? {
+                        gte: daterange.from,
+                        lte: daterange.to,
+                      }
+                    : undefined,
+                },
               ],
             },
           });
