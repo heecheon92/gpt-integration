@@ -27,6 +27,9 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
     isLoading,
     addToolResult,
   } = useChat({
+    headers: {
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    },
     onFinish: (message) => {
       console.log(
         "useChat onFinish message: ",

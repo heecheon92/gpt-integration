@@ -2,6 +2,8 @@ import { gptIndex } from "@/lib/db/pinecone";
 import { prisma } from "@/lib/db/prisma";
 import { getEmbedding } from "@/lib/openai";
 import { auth } from "@clerk/nextjs/server";
+import { endOfDay, startOfDay } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
@@ -24,6 +26,7 @@ import { createNote } from "../notes/util";
 
 export async function POST(req: NextRequest) {
   try {
+    const timezone = req.headers.get("timezone");
     const body = await req.json();
     const messages: Message[] = body.messages;
     const messagesTruncated = messages.slice(-6);
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
     console.log("query classification result: ", embeddingFilterTag);
 
     if (embeddingFilterTag === EMBEDDING_NOTES_FILTER_TAG)
-      return handleCreateNoteRequest({ messages, userId, embedding });
+      return handleCreateNoteRequest({ messages, userId, embedding, timezone });
     if (embeddingFilterTag === EMBEDDING_SALES_FILTER_TAG)
       return handleCreateSalesRecordRequest({ messages, userId });
 
@@ -142,10 +145,12 @@ function handleCreateNoteRequest({
   messages,
   userId,
   embedding,
+  timezone,
 }: {
   messages: Message[];
   userId: string;
   embedding: number[];
+  timezone?: string | null;
 }) {
   console.log("handleCreateNoteRequest called");
   const systemMessage: CoreMessage = {
@@ -167,9 +172,19 @@ function handleCreateNoteRequest({
     tools: {
       getNotes: tool({
         description: "Get the notes for the user",
-        parameters: z.object({}),
-        execute: async () => {
-          console.log("getNotes tool called");
+        parameters: z.object({
+          daterange: z
+            .object({
+              from: z.string().datetime(),
+              to: z.string().datetime(),
+            })
+            .optional(),
+        }),
+        execute: async ({ daterange }) => {
+          console.log(
+            "getNotes tool called with daterange: ",
+            JSON.stringify(daterange, null, 2),
+          );
 
           try {
             const queryFilter = {
@@ -186,6 +201,24 @@ function handleCreateNoteRequest({
                 id: {
                   in: vectorQueryResponse.matches.map((match) => match.id),
                 },
+                OR: [
+                  {
+                    createdAt: daterange
+                      ? {
+                          gte: daterange.from,
+                          lte: daterange.to,
+                        }
+                      : undefined,
+                  },
+                  {
+                    updatedAt: daterange
+                      ? {
+                          gte: daterange.from,
+                          lte: daterange.to,
+                        }
+                      : undefined,
+                  },
+                ],
               },
             });
 
@@ -242,6 +275,24 @@ function handleCreateNoteRequest({
           contentLabel: z.string().optional(),
           createButtonLabel: z.string().optional(),
         }),
+      },
+      getUserDatetime: {
+        description: "Get the current datetime",
+        parameters: z.object({}),
+        execute: async () => {
+          const now = new Date();
+          if (!timezone) {
+            return {
+              from: startOfDay(now).toISOString(),
+              to: endOfDay(now).toISOString(),
+            };
+          }
+
+          return {
+            from: startOfDay(toZonedTime(now, timezone)).toISOString(),
+            to: endOfDay(toZonedTime(now, timezone)).toISOString(),
+          };
+        },
       },
     },
     maxSteps: 5,
