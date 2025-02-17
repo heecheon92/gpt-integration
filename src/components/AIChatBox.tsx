@@ -56,6 +56,9 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
   const handleEnterKey = useDebounceCallback(() => {
     formRef.current?.requestSubmit();
   }, 100);
+  const hasToolInvocation = messages.some((m) =>
+    m.parts?.some((p) => p.type === "tool-invocation"),
+  );
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -112,6 +115,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
             ref={inputRef}
             value={input}
             onChange={handleInputChange}
+            disabled={hasToolInvocation}
             onKeyDown={(e: KeyboardEvent) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 if (formRef.current) {
@@ -135,7 +139,9 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
             >
               <Trash />
             </Button>
-            <Button type="submit">Send</Button>
+            <Button type="submit" disabled={hasToolInvocation}>
+              Send
+            </Button>
           </div>
         </form>
       </div>
