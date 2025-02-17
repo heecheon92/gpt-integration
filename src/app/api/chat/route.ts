@@ -5,8 +5,6 @@ import { auth } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  EMBEDDING_CREATE_NOTE_ACTION_TAG,
-  EMBEDDING_CREATE_RECORD_ACTION_TAG,
   EMBEDDING_FILTER_TAG_KEY,
   EMBEDDING_GENERAL_FILTER_TAG,
   EMBEDDING_NOTES_FILTER_TAG,
@@ -48,8 +46,6 @@ export async function POST(req: NextRequest) {
         EMBEDDING_NOTES_FILTER_TAG,
         EMBEDDING_SALES_FILTER_TAG,
         EMBEDDING_GENERAL_FILTER_TAG,
-        EMBEDDING_CREATE_NOTE_ACTION_TAG,
-        EMBEDDING_CREATE_RECORD_ACTION_TAG,
       ],
       prompt:
         `Classify the user's query.\n` +
@@ -59,9 +55,9 @@ export async function POST(req: NextRequest) {
 
     console.log("query classification result: ", embeddingFilterTag);
 
-    if (embeddingFilterTag === EMBEDDING_CREATE_NOTE_ACTION_TAG)
-      return handleCreateNoteRequest({ messages, userId });
-    if (embeddingFilterTag === EMBEDDING_CREATE_RECORD_ACTION_TAG)
+    if (embeddingFilterTag === EMBEDDING_NOTES_FILTER_TAG)
+      return handleCreateNoteRequest({ messages, userId, embedding });
+    if (embeddingFilterTag === EMBEDDING_SALES_FILTER_TAG)
       return handleCreateSalesRecordRequest({ messages, userId });
 
     const queryFilter =
@@ -145,18 +141,23 @@ export async function POST(req: NextRequest) {
 function handleCreateNoteRequest({
   messages,
   userId,
+  embedding,
 }: {
   messages: Message[];
   userId: string;
+  embedding: number[];
 }) {
   console.log("handleCreateNoteRequest called");
   const systemMessage: CoreMessage = {
     role: "system",
     content:
       "This is a system message to ask you to create a response message for the user's query.\n" +
+      "Upon user's request to create a note, if user's initial query include both title and content,\n" +
+      "create a note based on user's request.\n" +
       "Do not create the note if the user's query does not include any title or content.\n" +
-      "Let the user know if the user's query does not include any title or content.\n" +
-      "Once both title and content are available, ask for the confirmation.\n" +
+      "Let the user know if the user's query does not include any title or content and prompt for note data.\n" +
+      "If both title and content are available via prompt, ask for the confirmation.\n" +
+      "If user's request is not related to creating a note, respond to the user accordingly on your discretion.\n" +
       "Make sure that you respond to the user with the corresponding language of the content.\n",
   };
 
@@ -164,6 +165,39 @@ function handleCreateNoteRequest({
     model: openai("gpt-4o"),
     messages: [systemMessage, ...convertToCoreMessages(messages)],
     tools: {
+      getNotes: tool({
+        description: "Get the notes for the user",
+        parameters: z.object({}),
+        execute: async () => {
+          console.log("getNotes tool called");
+
+          try {
+            const queryFilter = {
+              userId,
+              [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
+            };
+            const vectorQueryResponse = await gptIndex.query({
+              vector: embedding,
+              topK: 20,
+              filter: queryFilter,
+            });
+            const relevantNotes = await prisma.note.findMany({
+              where: {
+                id: {
+                  in: vectorQueryResponse.matches.map((match) => match.id),
+                },
+              },
+            });
+
+            return relevantNotes
+              .map((note) => `Title: ${note.title}\n\nContent: ${note.content}`)
+              .join("\n\n");
+          } catch (error) {
+            console.error(error);
+            return "An error occurred while fetching the notes. Please try again.";
+          }
+        },
+      }),
       makeNote: tool({
         description: "Create a note based on user's request",
         parameters: z.object({
