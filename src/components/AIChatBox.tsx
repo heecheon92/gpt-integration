@@ -6,6 +6,7 @@ import { Message, useChat } from "ai/react";
 import { Bot, Trash, UserRound, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import Markdown from "react-markdown";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -159,17 +160,17 @@ function ChatMessage({
         switch (part.type) {
           case "text":
             return (
-              <p
+              <Markdown
+                key={`${part.type}-${index}`}
                 className={cn(
-                  "whitespace-pre-line rounded-md border px-3 py-2",
+                  "rounded-md border px-3 py-2 leading-6",
                   isAIMessage
                     ? "bg-background"
                     : "bg-primary text-primary-foreground",
                 )}
-                key={`${part.type}-${index}`}
               >
                 {content}
-              </p>
+              </Markdown>
             );
           case "tool-invocation":
             const toolInvocation = part.toolInvocation;
