@@ -99,7 +99,7 @@ export function noteTools({
         }
       },
     }),
-    askForConfirmation: {
+    askForConfirmation: tool({
       description: "Ask the user for confirmation to create the note.",
       parameters: z.object({
         message: z
@@ -108,8 +108,8 @@ export function noteTools({
             "The message to ask for confirmation with summary of the note including the title and content.",
           ),
       }),
-    },
-    promptForNoteData: {
+    }),
+    promptForNoteData: tool({
       description: "Prompt the user to provide the note data.",
       parameters: z.object({
         message: z
@@ -147,8 +147,8 @@ export function noteTools({
           .string()
           .describe("The label for the cancel button"),
       }),
-    },
-    getUserDatetime: {
+    }),
+    getUserDatetime: tool({
       description: "Get the current datetime",
       parameters: z.object({}),
       execute: async () => {
@@ -165,6 +165,6 @@ export function noteTools({
           to: endOfDay(toZonedTime(now, timezone)).toISOString(),
         };
       },
-    },
+    }),
   };
 }
