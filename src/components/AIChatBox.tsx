@@ -350,6 +350,19 @@ function HandleNotePrompt({
         >
           {toolInvocation.args.createButtonLabel}
         </Button>
+
+        <Button
+          variant={"destructive"}
+          className="w-full"
+          onClick={() =>
+            addToolResult({
+              toolCallId,
+              result: "Cancel note creation",
+            })
+          }
+        >
+          {toolInvocation.args.cancelButtonLabel}
+        </Button>
       </div>
     </div>
   );

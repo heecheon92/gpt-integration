@@ -143,6 +143,9 @@ export function noteTools({
         createButtonLabel: z
           .string()
           .describe("The label for the create button"),
+        cancelButtonLabel: z
+          .string()
+          .describe("The label for the cancel button"),
       }),
     },
     getUserDatetime: {
