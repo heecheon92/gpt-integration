@@ -84,7 +84,6 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
     }
   }, [open]);
 
-  const lastMessageIsUser = messages[messages.length - 1]?.role === "user";
   return (
     <div
       className={cn(
@@ -107,10 +106,11 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
               addToolResult={addToolResult}
             />
           ))}
-          {isLoading && lastMessageIsUser && (
+          {isLoading && (
             <ChatMessage
               message={{ role: "assistant", content: "Thinking...", id: "999" }}
               addToolResult={addToolResult}
+              isLoading={true}
             />
           )}
         </div>
@@ -161,9 +161,11 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
 function ChatMessage({
   message: { role, content, parts },
   addToolResult,
+  isLoading,
 }: {
   message: Message;
   addToolResult: AddToolResult;
+  isLoading?: boolean;
 }) {
   const { user } = useUser();
   const isAIMessage = role === "assistant";
@@ -176,7 +178,19 @@ function ChatMessage({
       )}
     >
       {isAIMessage && <Bot size={20} className="mr-2 shrink-0" />}
-
+      {isLoading && (
+        <Markdown
+          key={`loading-content-${content}`}
+          className={cn(
+            "rounded-md border px-3 py-2 leading-6",
+            isAIMessage
+              ? "bg-background"
+              : "bg-primary text-primary-foreground",
+          )}
+        >
+          {content}
+        </Markdown>
+      )}
       {parts?.map((part, index) => {
         switch (part.type) {
           case "text":
