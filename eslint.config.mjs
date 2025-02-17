@@ -80,6 +80,7 @@ const eslintConfig = [
   },
   {
     files: [
+      "**/NoSSR.{js,ts,jsx,tsx}",
       "*.config.{js,mjs,cjs,ts,mts,jsx,tsx}",
       "**/manifest.{js,ts}",
 
