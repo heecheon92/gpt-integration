@@ -225,6 +225,24 @@ function handleCreateNoteRequest({
             ),
         }),
       },
+      promptForNoteData: {
+        description: "Prompt the user to provide the note data.",
+        parameters: z.object({
+          message: z
+            .string()
+            .describe(
+              "The message to prompt the user to provide the note data.\n" +
+                "If title is missing, ask for the title.\n" +
+                "If content is missing, ask for the content.\n" +
+                "If both are missing, ask for both.",
+            ),
+          title: z.string().optional(),
+          content: z.string().optional(),
+          titleLabel: z.string().optional(),
+          contentLabel: z.string().optional(),
+          createButtonLabel: z.string().optional(),
+        }),
+      },
     },
     maxSteps: 5,
   });

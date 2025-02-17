@@ -1,17 +1,21 @@
 "use client";
 import { cn } from "@/lib/utils";
 import { useUser } from "@clerk/nextjs";
+import { ToolInvocation } from "ai";
 import { Message, useChat } from "ai/react";
 import { Bot, Trash, UserRound, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { KeyboardEvent, useCallback, useEffect, useRef } from "react";
+import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 
 type AIChatBoxProps = {
   open: boolean;
   onClose: () => void;
 };
+type AddToolResult = ReturnType<typeof useChat>["addToolResult"];
 export function AIChatBox({ open, onClose }: AIChatBoxProps) {
   const {
     messages,
@@ -77,9 +81,9 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
           className="flex h-full flex-col space-y-2 overflow-y-auto p-4"
           ref={scrollRef}
         >
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <ChatMessage
-              key={message.id}
+              key={`${message.id}-${index}`}
               message={message}
               addToolResult={addToolResult}
             />
@@ -137,7 +141,7 @@ function ChatMessage({
   addToolResult,
 }: {
   message: Message;
-  addToolResult: (args: { toolCallId: string; result: string }) => void;
+  addToolResult: AddToolResult;
 }) {
   const { user } = useUser();
   const isAIMessage = role === "assistant";
@@ -169,52 +173,27 @@ function ChatMessage({
             );
           case "tool-invocation":
             const toolInvocation = part.toolInvocation;
-            const toolCallId = toolInvocation.toolCallId;
-
-            if (
-              toolInvocation.toolName === "askForConfirmation" &&
-              toolInvocation.state === "call"
-            ) {
-              return (
-                <div
-                  key={toolCallId}
-                  className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2"
-                >
-                  <p className="whitespace-pre-wrap">
-                    {(toolInvocation.args.message as string).replaceAll(
-                      "\\n",
-                      "\n",
-                    )}
-                  </p>
-                  <div className="flex w-full flex-row justify-between space-x-4">
-                    <Button
-                      variant={"outline"}
-                      className="w-full bg-blue-600 text-secondary hover:bg-blue-600/80"
-                      onClick={() => {
-                        addToolResult({
-                          toolCallId,
-                          result: "Yes, confirmed.",
-                        });
-                        console.log("ToolResult Added");
-                      }}
-                    >
-                      Yes
-                    </Button>
-                    <Button
-                      variant={"destructive"}
-                      className="w-full"
-                      onClick={() =>
-                        addToolResult({
-                          toolCallId,
-                          result: "No, denied.",
-                        })
-                      }
-                    >
-                      No
-                    </Button>
-                  </div>
-                </div>
-              );
+            if (toolInvocation.state === "call") {
+              switch (toolInvocation.toolName) {
+                case "askForConfirmation":
+                  return (
+                    <HandleConfirmation
+                      toolInvocation={toolInvocation}
+                      addToolResult={addToolResult}
+                      key={`${part.type}-${index}`}
+                    />
+                  );
+                case "promptForNoteData":
+                  return (
+                    <HandleNotePrompt
+                      toolInvocation={toolInvocation}
+                      addToolResult={addToolResult}
+                      key={`${part.type}-${index}`}
+                    />
+                  );
+                default:
+                  return null;
+              }
             }
         }
       })}
@@ -252,4 +231,119 @@ function useDebounceCallback<T extends (...args: any[]) => void>(
   }, []);
 
   return debouncedCallback;
+}
+
+function HandleConfirmation({
+  toolInvocation,
+  addToolResult,
+}: {
+  toolInvocation: ToolInvocation;
+  addToolResult: AddToolResult;
+}) {
+  const toolCallId = toolInvocation.toolCallId;
+  return (
+    <div
+      key={toolCallId}
+      className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2"
+    >
+      <p className="whitespace-pre-wrap">
+        {(toolInvocation.args.message as string).replaceAll("\\n", "\n")}
+      </p>
+      <div className="flex w-full flex-row justify-between space-x-4">
+        <Button
+          variant={"outline"}
+          className="w-full bg-blue-600 text-secondary hover:bg-blue-600/80"
+          onClick={() => {
+            addToolResult({
+              toolCallId,
+              result: "Yes, confirmed.",
+            });
+            console.log("ToolResult Added");
+          }}
+        >
+          Yes
+        </Button>
+        <Button
+          variant={"destructive"}
+          className="w-full"
+          onClick={() =>
+            addToolResult({
+              toolCallId,
+              result: "No, denied.",
+            })
+          }
+        >
+          No
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function HandleNotePrompt({
+  toolInvocation,
+  addToolResult,
+}: {
+  toolInvocation: ToolInvocation;
+  addToolResult: AddToolResult;
+}) {
+  const toolCallId = toolInvocation.toolCallId;
+  const [title, setTitle] = useState(toolInvocation.args.title ?? "");
+  const [content, setContent] = useState(toolInvocation.args.content ?? "");
+
+  return (
+    <div
+      key={toolCallId}
+      className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2"
+    >
+      <p className="whitespace-pre-wrap">
+        {(toolInvocation.args.message as string).replaceAll("\\n", "\n")}
+      </p>
+      <div className="flex w-full flex-col space-y-4">
+        {!toolInvocation.args.title && (
+          <div className="flex flex-row items-center space-x-2">
+            <Label htmlFor="note-title" className="whitespace-nowrap">
+              {toolInvocation.args.titleLabel}
+            </Label>
+            <Input
+              id="note-title"
+              value={title}
+              onChange={(e) => setTitle(e.currentTarget.value)}
+            />
+          </div>
+        )}
+
+        {!toolInvocation.args.content && (
+          <div className="flex flex-row items-center space-x-2">
+            <Label htmlFor="note-content" className="whitespace-nowrap">
+              {toolInvocation.args.contentLabel}
+            </Label>
+            <Input
+              id="note-content"
+              value={content}
+              onChange={(e) => setContent(e.currentTarget.value)}
+            />
+          </div>
+        )}
+
+        <Button
+          disabled={!title || !content}
+          variant={"outline"}
+          className="w-full bg-blue-600 text-secondary hover:bg-blue-600/80"
+          onClick={() => {
+            addToolResult({
+              toolCallId,
+              result: {
+                title,
+                content,
+              },
+            });
+            console.log("ToolResult Added");
+          }}
+        >
+          {toolInvocation.args.createButtonLabel}
+        </Button>
+      </div>
+    </div>
+  );
 }
