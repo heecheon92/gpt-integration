@@ -5,7 +5,14 @@ import { ToolInvocation } from "ai";
 import { Message, useChat } from "ai/react";
 import { Bot, Trash, UserRound, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { KeyboardEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+  KeyboardEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import Markdown from "react-markdown";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -56,9 +63,11 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
   const handleEnterKey = useDebounceCallback(() => {
     formRef.current?.requestSubmit();
   }, 100);
-  const hasToolInvocation = messages.some((m) =>
-    m.parts?.some((p) => p.type === "tool-invocation"),
-  );
+  const isLastMessageToolInvocation = useMemo(() => {
+    const lastMessage = messages[messages.length - 1];
+    const lastPart = lastMessage?.parts?.[lastMessage.parts.length - 1];
+    return lastPart?.type === "tool-invocation";
+  }, [messages]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -115,7 +124,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
             ref={inputRef}
             value={input}
             onChange={handleInputChange}
-            disabled={hasToolInvocation}
+            disabled={isLastMessageToolInvocation}
             onKeyDown={(e: KeyboardEvent) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 if (formRef.current) {
@@ -139,7 +148,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
             >
               <Trash />
             </Button>
-            <Button type="submit" disabled={hasToolInvocation}>
+            <Button type="submit" disabled={isLastMessageToolInvocation}>
               Send
             </Button>
           </div>
