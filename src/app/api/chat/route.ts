@@ -13,14 +13,21 @@ import {
   EMBEDDING_SALES_FILTER_TAG,
 } from "@/constants";
 import { openai } from "@ai-sdk/openai";
-import { CoreMessage, generateObject, streamText, tool } from "ai";
+import {
+  convertToCoreMessages,
+  CoreMessage,
+  generateObject,
+  Message,
+  streamText,
+  tool,
+} from "ai";
 import { z } from "zod";
 import { createNote } from "../notes/util";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const messages: CoreMessage[] = body.messages;
+    const messages: Message[] = body.messages;
     const messagesTruncated = messages.slice(-6);
     const embedding = await getEmbedding(
       messagesTruncated.map((m) => m.content).join("\n"),
@@ -31,6 +38,8 @@ export async function POST(req: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    console.log("Chat route handler called", JSON.stringify(messages, null, 2));
 
     const { object: embeddingFilterTag } = await generateObject({
       model: openai("gpt-4o"),
@@ -45,7 +54,7 @@ export async function POST(req: NextRequest) {
       prompt:
         `Classify the user's query.\n` +
         `User's query is as follow:\n` +
-        `${messages[messages.length - 1].content}`,
+        `${messages.findLast((m) => m.role === "user")?.content}`,
     });
 
     console.log("query classification result: ", embeddingFilterTag);
@@ -137,28 +146,32 @@ function handleCreateNoteRequest({
   messages,
   userId,
 }: {
-  messages: CoreMessage[];
+  messages: Message[];
   userId: string;
 }) {
+  console.log("handleCreateNoteRequest called");
+  const systemMessage: CoreMessage = {
+    role: "system",
+    content:
+      "This is a system message to ask you to create a response message for the user's query.\n" +
+      "Do not create the note if the user's query does not include any title or content.\n" +
+      "Let the user know if the user's query does not include any title or content.\n" +
+      "Once both title and content are available, ask for the confirmation.\n" +
+      "Make sure that you respond to the user with the corresponding language of the content.\n",
+  };
+
   const result = streamText({
     model: openai("gpt-4o"),
-    prompt:
-      `This is a system message to ask you to create a response message for the user's query.\n` +
-      `I am providing the way to create a user's note. Once it is done, respond to the user.\n ` +
-      `Do not create the note if the user's query does not include any title or content.\n` +
-      `Let the user know if the user's query does not include any title or content.\n` +
-      `Make sure that you respond to the user with the corresponding language of the content.\n` +
-      `User's query is as follow:\n` +
-      `${messages[messages.length - 1].content}\n`,
+    messages: [systemMessage, ...convertToCoreMessages(messages)],
     tools: {
       makeNote: tool({
-        description:
-          "Create a note based on user's request and let the user know if the user's query does not include any title or content",
+        description: "Create a note based on user's request",
         parameters: z.object({
           title: z.string(),
           content: z.string(),
         }),
         execute: async ({ title, content }) => {
+          console.log("makeNote tool called");
           try {
             const note = await createNote({ userId, title, content });
             return `Note created successfully with title: ${note.title} and content: ${note.content}`;
@@ -168,6 +181,16 @@ function handleCreateNoteRequest({
           }
         },
       }),
+      askForConfirmation: {
+        description: "Ask the user for confirmation to create the note.",
+        parameters: z.object({
+          message: z
+            .string()
+            .describe(
+              "The message to ask for confirmation with summary of the note including the title and content.",
+            ),
+        }),
+      },
     },
     maxSteps: 5,
   });
@@ -179,7 +202,7 @@ function handleCreateSalesRecordRequest({
   messages,
   userId: _,
 }: {
-  messages: CoreMessage[];
+  messages: Message[];
   userId: string;
 }) {
   const result = streamText({

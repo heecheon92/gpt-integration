@@ -20,6 +20,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
     handleSubmit,
     setMessages,
     isLoading,
+    addToolResult,
   } = useChat({
     onFinish: (message) => {
       console.log(
@@ -77,11 +78,16 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
           ref={scrollRef}
         >
           {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
+            <ChatMessage
+              key={message.id}
+              message={message}
+              addToolResult={addToolResult}
+            />
           ))}
           {isLoading && lastMessageIsUser && (
             <ChatMessage
-              message={{ role: "assistant", content: "Thinking..." }}
+              message={{ role: "assistant", content: "Thinking...", id: "999" }}
+              addToolResult={addToolResult}
             />
           )}
         </div>
@@ -127,9 +133,11 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
 }
 
 function ChatMessage({
-  message: { role, content },
+  message: { role, content, parts },
+  addToolResult,
 }: {
-  message: Pick<Message, "role" | "content">;
+  message: Message;
+  addToolResult: (args: { toolCallId: string; result: string }) => void;
 }) {
   const { user } = useUser();
   const isAIMessage = role === "assistant";
@@ -142,14 +150,74 @@ function ChatMessage({
       )}
     >
       {isAIMessage && <Bot size={20} className="mr-2 shrink-0" />}
-      <p
-        className={cn(
-          "whitespace-pre-line rounded-md border px-3 py-2",
-          isAIMessage ? "bg-background" : "bg-primary text-primary-foreground",
-        )}
-      >
-        {content}
-      </p>
+
+      {parts?.map((part, index) => {
+        switch (part.type) {
+          case "text":
+            return (
+              <p
+                className={cn(
+                  "whitespace-pre-line rounded-md border px-3 py-2",
+                  isAIMessage
+                    ? "bg-background"
+                    : "bg-primary text-primary-foreground",
+                )}
+                key={`${part.type}-${index}`}
+              >
+                {content}
+              </p>
+            );
+          case "tool-invocation":
+            const toolInvocation = part.toolInvocation;
+            const toolCallId = toolInvocation.toolCallId;
+
+            if (
+              toolInvocation.toolName === "askForConfirmation" &&
+              toolInvocation.state === "call"
+            ) {
+              return (
+                <div
+                  key={toolCallId}
+                  className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2"
+                >
+                  <p className="whitespace-pre-wrap">
+                    {(toolInvocation.args.message as string).replaceAll(
+                      "\\n",
+                      "\n",
+                    )}
+                  </p>
+                  <div className="flex w-full flex-row justify-between space-x-4">
+                    <Button
+                      variant={"outline"}
+                      className="w-full bg-blue-600 text-secondary hover:bg-blue-600/80"
+                      onClick={() => {
+                        addToolResult({
+                          toolCallId,
+                          result: "Yes, confirmed.",
+                        });
+                        console.log("ToolResult Added");
+                      }}
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      variant={"destructive"}
+                      className="w-full"
+                      onClick={() =>
+                        addToolResult({
+                          toolCallId,
+                          result: "No, denied.",
+                        })
+                      }
+                    >
+                      No
+                    </Button>
+                  </div>
+                </div>
+              );
+            }
+        }
+      })}
       {!isAIMessage && user?.imageUrl && (
         <UserRound size={20} className="ml-2 shrink-0" />
       )}
