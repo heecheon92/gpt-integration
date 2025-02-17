@@ -2,6 +2,7 @@
 import { SalesRecord } from "@prisma/client";
 import { useState } from "react";
 import { AddSalesRecordDialog } from "./AddSalesRecordDialog";
+import NoSSR from "./NoSSR";
 import {
   Card,
   CardContent,
@@ -21,7 +22,7 @@ export function Record({ record }: RecordProps) {
   ).toDateString();
 
   return (
-    <>
+    <NoSSR>
       <Card
         className="cursor-pointer transition-shadow hover:shadow-lg"
         onClick={() => setShowDeleteDialog(true)}
@@ -45,6 +46,6 @@ export function Record({ record }: RecordProps) {
         setOpen={setShowDeleteDialog}
         recordToEdit={record}
       />
-    </>
+    </NoSSR>
   );
 }
