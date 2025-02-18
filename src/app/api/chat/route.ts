@@ -162,7 +162,7 @@ function handleNoteRequest({
       "Upon user's request to create a note, if user's initial query include both title and content,\n" +
       "create a note based on user's request.\n" +
       "Do not create the note if the user's query does not include any title or content.\n" +
-      "Let the user know if the user's query does not include any title or content and prompt for note data.\n" +
+      "If the user's query does not include any title or content, provide a UI to receive note data.\n" +
       "If both title and content are available via prompt, ask for the confirmation.\n" +
       "If user's request is not related to creating a note, respond to the user accordingly on your discretion.\n" +
       "Make sure that you respond to the user with the corresponding language of the content.\n",

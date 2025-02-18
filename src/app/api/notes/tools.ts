@@ -109,8 +109,8 @@ export function noteTools({
           ),
       }),
     }),
-    promptForNoteData: tool({
-      description: "Prompt the user to provide the note data.",
+    renderNoteUI: tool({
+      description: "Prompt the user to provide the note data via UI.",
       parameters: z.object({
         message: z
           .string()
