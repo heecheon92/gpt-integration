@@ -14,6 +14,7 @@ import {
   useState,
 } from "react";
 import Markdown from "react-markdown";
+import { AIThinkingIndicator } from "./AIThinkingIndicator";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -101,18 +102,12 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
         >
           {messages.map((message, index) => (
             <ChatMessage
-              key={`${message.id}-${index}`}
+              key={`${message.id}-${message}-${index}`}
               message={message}
               addToolResult={addToolResult}
             />
           ))}
-          {isLoading && (
-            <ChatMessage
-              message={{ role: "assistant", content: "Thinking...", id: "999" }}
-              addToolResult={addToolResult}
-              isLoading={true}
-            />
-          )}
+          {isLoading && <AIThinkingIndicator />}
         </div>
         <form
           className="m-3 flex flex-col gap-2"
@@ -161,14 +156,16 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
 function ChatMessage({
   message: { role, content, parts },
   addToolResult,
-  isLoading,
 }: {
   message: Message;
   addToolResult: AddToolResult;
-  isLoading?: boolean;
 }) {
   const { user } = useUser();
   const isAIMessage = role === "assistant";
+
+  if (isAIMessage) {
+    console.log("AI Message: ", JSON.stringify({ content, parts }, null, 2));
+  }
 
   return (
     <div
@@ -178,19 +175,6 @@ function ChatMessage({
       )}
     >
       {isAIMessage && <Bot size={20} className="mr-2 shrink-0" />}
-      {isLoading && (
-        <Markdown
-          key={`loading-content-${content}`}
-          className={cn(
-            "rounded-md border px-3 py-2 leading-6",
-            isAIMessage
-              ? "bg-background"
-              : "bg-primary text-primary-foreground",
-          )}
-        >
-          {content}
-        </Markdown>
-      )}
       {parts?.map((part, index) => {
         switch (part.type) {
           case "text":
@@ -219,7 +203,7 @@ function ChatMessage({
                       key={`${part.type}-${index}`}
                     />
                   );
-                case "promptForNoteData":
+                case "renderNoteUI":
                   return (
                     <HandleNotePrompt
                       toolInvocation={toolInvocation}
@@ -328,9 +312,20 @@ function HandleNotePrompt({
   const [content, setContent] = useState(toolInvocation.args.content ?? "");
 
   return (
-    <div
+    <form
       key={toolCallId}
       className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        addToolResult({
+          toolCallId,
+          result: {
+            title,
+            content,
+          },
+        });
+        console.log("ToolResult Added");
+      }}
     >
       <p className="whitespace-pre-wrap">
         {(toolInvocation.args.message as string).replaceAll("\\n", "\n")}
@@ -363,24 +358,16 @@ function HandleNotePrompt({
         )}
 
         <Button
+          type="submit"
           disabled={!title || !content}
           variant={"outline"}
           className="w-full bg-blue-600 text-secondary hover:bg-blue-600/80"
-          onClick={() => {
-            addToolResult({
-              toolCallId,
-              result: {
-                title,
-                content,
-              },
-            });
-            console.log("ToolResult Added");
-          }}
         >
           {toolInvocation.args.createButtonLabel}
         </Button>
 
         <Button
+          type="button"
           variant={"destructive"}
           className="w-full"
           onClick={() =>
@@ -393,6 +380,6 @@ function HandleNotePrompt({
           {toolInvocation.args.cancelButtonLabel}
         </Button>
       </div>
-    </div>
+    </form>
   );
 }
