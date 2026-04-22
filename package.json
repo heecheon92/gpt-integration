@@ -3,13 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "pnpm lint && NODE_OPTIONS='--inspect' next dev",
+    "dev": "pnpm lint && NODE_OPTIONS='--inspect' next dev --turbopack",
     "dev:turbo": "pnpm lint && NODE_OPTIONS='--inspect' next dev --turbopack",
     "dev:secure": "pnpm lint && NODE_OPTIONS='--inspect' next dev --experimental-https",
     "dev:turbo:secure": "pnpm lint && NODE_OPTIONS='--inspect' next dev --experimental-https",
     "build": "pnpm exec prisma generate && next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "postinstall": "pnpm exec prisma generate"
   },
   "dependencies": {
@@ -28,10 +28,10 @@
     "date-fns": "^4.1.0",
     "date-fns-tz": "^3.2.0",
     "lucide-react": "^0.475.0",
-    "next": "15.1.11",
+    "next": "16.2.4",
     "next-themes": "^0.4.4",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "19.2.5",
+    "react-dom": "19.2.5",
     "react-hook-form": "^7.54.2",
     "react-markdown": "^9.0.3",
     "tailwind-merge": "^3.0.1",
@@ -39,16 +39,15 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
-    "@next/eslint-plugin-next": "15.1.6",
+    "@next/eslint-plugin-next": "16.2.4",
     "@prisma/client": "^6.3.1",
     "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.23.0",
     "@typescript-eslint/parser": "^8.23.0",
     "eslint": "^9",
-    "eslint-config-next": "15.1.6",
+    "eslint-config-next": "16.2.4",
     "eslint-import-resolver-node": "^0.3.9",
     "eslint-import-resolver-typescript": "^3.7.0",
     "eslint-plugin-import": "^2.31.0",
@@ -74,6 +73,10 @@
       "@prisma/engines",
       "prisma",
       "sharp"
-    ]
+    ],
+    "overrides": {
+      "@types/react": "19.2.14",
+      "@types/react-dom": "19.2.3"
+    }
   }
 }
