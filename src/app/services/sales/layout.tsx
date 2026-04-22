@@ -3,7 +3,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "FlowBrain - Notes",
 };
-export default async function NotesLayout({
+export default function NotesLayout({
   children,
 }: {
   children: React.ReactNode;

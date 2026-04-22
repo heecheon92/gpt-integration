@@ -1,9 +1,9 @@
-import logo from "@/assets/logo.png";
-import { Button } from "@/components/ui/button";
 import { auth } from "@clerk/nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import logo from "@/assets/logo.png";
+import { Button } from "@/components/ui/button";
 
 export default async function Home() {
   const { userId } = await auth();
@@ -22,8 +22,8 @@ export default async function Home() {
         An intelligent note-taking app with AI inttegration, built with OpenAI,
         Pinecone, Next.js, Shadcn UI, Clerk, and more.
       </p>
-      <Button size="lg" asChild>
-        <Link href="/services/notes">Open</Link>
+      <Button size="lg" render={<Link href="/services/notes" />}>
+        Open
       </Button>
     </main>
   );

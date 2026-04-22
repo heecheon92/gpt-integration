@@ -1,14 +1,14 @@
+import { tool } from "ai";
+import { endOfDay } from "date-fns/endOfDay";
+import { startOfDay } from "date-fns/startOfDay";
+import { toZonedTime } from "date-fns-tz/toZonedTime";
+import { z } from "zod";
 import {
   EMBEDDING_FILTER_TAG_KEY,
   EMBEDDING_SALES_FILTER_TAG,
 } from "@/constants";
 import { gptIndex } from "@/lib/db/pinecone";
 import { prisma } from "@/lib/db/prisma";
-import { tool } from "ai";
-import { toZonedTime } from "date-fns-tz/toZonedTime";
-import { endOfDay } from "date-fns/endOfDay";
-import { startOfDay } from "date-fns/startOfDay";
-import { z } from "zod";
 
 export function salesTools({
   userId,
@@ -22,7 +22,7 @@ export function salesTools({
   return {
     getSalesRecord: tool({
       description: "Get the sales record from the user's query",
-      parameters: z.object({
+      inputSchema: z.object({
         daterange: z
           .object({
             from: z.string().datetime(),
@@ -95,8 +95,8 @@ export function salesTools({
 
     getUserDatetime: tool({
       description: "Get the current datetime",
-      parameters: z.object({}),
-      execute: async () => {
+      inputSchema: z.object({}),
+      execute: () => {
         const now = new Date();
         if (!timezone) {
           return {

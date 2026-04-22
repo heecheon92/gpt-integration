@@ -3,7 +3,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = {
   title: "FlowBrain - Sign Up",
 };
-export default async function SignUpLayout({
+export default function SignUpLayout({
   children,
 }: {
   children: React.ReactNode;

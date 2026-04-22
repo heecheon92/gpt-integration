@@ -1,11 +1,17 @@
 "use client";
-import { cn } from "@/lib/utils";
+
+import type { UIMessage } from "@ai-sdk/react";
+import { useChat } from "@ai-sdk/react";
 import { useUser } from "@clerk/nextjs";
-import { ToolInvocation } from "ai";
-import { Message, useChat } from "ai/react";
+import type { InferUITools } from "ai";
+import {
+  DefaultChatTransport,
+  lastAssistantMessageIsCompleteWithToolCalls,
+} from "ai";
 import { Bot, Trash, UserRound, XCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import {
+  FormEvent,
   KeyboardEvent,
   useCallback,
   useEffect,
@@ -14,6 +20,9 @@ import {
   useState,
 } from "react";
 import Markdown from "react-markdown";
+import type { noteTools } from "@/app/api/notes/tools";
+import type { salesTools } from "@/app/api/sales/tools";
+import { cn } from "@/lib/utils";
 import { AIThinkingIndicator } from "./AIThinkingIndicator";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -24,51 +33,72 @@ type AIChatBoxProps = {
   open: boolean;
   onClose: () => void;
 };
-type AddToolResult = ReturnType<typeof useChat>["addToolResult"];
-export function AIChatBox({ open, onClose }: AIChatBoxProps) {
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    setMessages,
-    isLoading,
-    addToolResult,
-  } = useChat({
-    headers: {
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    },
-    onFinish: (message) => {
-      console.log(
-        "useChat onFinish message: ",
-        JSON.stringify(message, null, 2),
-      );
 
-      if (
-        message.parts &&
-        message.parts.length > 0 &&
-        message.parts.some((part) => part.type === "tool-invocation")
-      ) {
+type ChatTools = InferUITools<
+  ReturnType<typeof noteTools> & ReturnType<typeof salesTools>
+>;
+
+type ChatUIMessage = UIMessage<unknown, never, ChatTools>;
+type AddToolOutput = ReturnType<typeof useChat<ChatUIMessage>>["addToolOutput"];
+type ConfirmationPart = Extract<
+  ChatUIMessage["parts"][number],
+  { type: "tool-askForConfirmation" }
+>;
+type NotePromptPart = Extract<
+  ChatUIMessage["parts"][number],
+  { type: "tool-renderNoteUI" }
+>;
+
+const chatTransport = new DefaultChatTransport<ChatUIMessage>({
+  headers: () => ({
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  }),
+});
+
+export function AIChatBox({ open, onClose }: AIChatBoxProps) {
+  const [input, setInput] = useState("");
+  const router = useRouter();
+  const { messages, sendMessage, setMessages, status, addToolOutput } =
+    useChat<ChatUIMessage>({
+      transport: chatTransport,
+      sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
+      onFinish: ({ message }) => {
         console.log(
-          "There was a tool-invocation part in the message, refreshing the page",
+          "useChat onFinish message: ",
+          JSON.stringify(message, null, 2),
         );
-        router.refresh();
-      }
-    },
-  });
+
+        if (hasCompletedMakeNoteTool(message)) {
+          console.log("A note was created by a tool call, refreshing the page");
+          router.refresh();
+        }
+      },
+    });
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
   const handleEnterKey = useDebounceCallback(() => {
     formRef.current?.requestSubmit();
   }, 100);
-  const isLastMessageToolInvocation = useMemo(() => {
-    const lastMessage = messages[messages.length - 1];
-    const lastPart = lastMessage?.parts?.[lastMessage.parts.length - 1];
-    return lastPart?.type === "tool-invocation";
-  }, [messages]);
+  const isAwaitingClientToolOutput = useMemo(
+    () => needsClientToolOutput(messages),
+    [messages],
+  );
+  const isRequestInFlight = status === "submitted" || status === "streaming";
+  const isInputDisabled = isRequestInFlight || isAwaitingClientToolOutput;
+
+  const handleSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const text = input.trim();
+      if (!text || isInputDisabled) return;
+
+      setInput("");
+      await sendMessage({ text });
+    },
+    [input, isInputDisabled, sendMessage],
+  );
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -92,7 +122,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
         open ? "fixed" : "hidden",
       )}
     >
-      <button onClick={onClose} className="mb-1 ms-auto block">
+      <button type="button" onClick={onClose} className="mb-1 ms-auto block">
         <XCircle size={30} />
       </button>
       <div className="flex h-[600px] flex-col justify-between rounded border bg-background shadow-xl">
@@ -102,12 +132,12 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
         >
           {messages.map((message, index) => (
             <ChatMessage
-              key={`${message.id}-${message}-${index}`}
+              key={`${message.id}-${index}`}
               message={message}
-              addToolResult={addToolResult}
+              addToolOutput={addToolOutput}
             />
           ))}
-          {isLoading && <AIThinkingIndicator />}
+          {isRequestInFlight && <AIThinkingIndicator />}
         </div>
         <form
           className="m-3 flex flex-col gap-2"
@@ -118,8 +148,8 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
           <Textarea
             ref={inputRef}
             value={input}
-            onChange={handleInputChange}
-            disabled={isLastMessageToolInvocation}
+            onChange={(e) => setInput(e.currentTarget.value)}
+            disabled={isInputDisabled}
             onKeyDown={(e: KeyboardEvent) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 if (formRef.current) {
@@ -143,7 +173,7 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
             >
               <Trash />
             </Button>
-            <Button type="submit" disabled={isLastMessageToolInvocation}>
+            <Button type="submit" disabled={isInputDisabled || !input.trim()}>
               Send
             </Button>
           </div>
@@ -154,17 +184,17 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
 }
 
 function ChatMessage({
-  message: { role, content, parts },
-  addToolResult,
+  message,
+  addToolOutput,
 }: {
-  message: Message;
-  addToolResult: AddToolResult;
+  message: ChatUIMessage;
+  addToolOutput: AddToolOutput;
 }) {
   const { user } = useUser();
-  const isAIMessage = role === "assistant";
+  const isAIMessage = message.role === "assistant";
 
   if (isAIMessage) {
-    console.log("AI Message: ", JSON.stringify({ content, parts }, null, 2));
+    console.log("AI Message: ", JSON.stringify(message, null, 2));
   }
 
   return (
@@ -175,7 +205,7 @@ function ChatMessage({
       )}
     >
       {isAIMessage && <Bot size={20} className="mr-2 shrink-0" />}
-      {parts?.map((part, index) => {
+      {message.parts.map((part, index) => {
         switch (part.type) {
           case "text":
             return (
@@ -188,33 +218,27 @@ function ChatMessage({
                     : "bg-primary text-primary-foreground",
                 )}
               >
-                {content}
+                {part.text}
               </Markdown>
             );
-          case "tool-invocation":
-            const toolInvocation = part.toolInvocation;
-            if (toolInvocation.state === "call") {
-              switch (toolInvocation.toolName) {
-                case "askForConfirmation":
-                  return (
-                    <HandleConfirmation
-                      toolInvocation={toolInvocation}
-                      addToolResult={addToolResult}
-                      key={`${part.type}-${index}`}
-                    />
-                  );
-                case "renderNoteUI":
-                  return (
-                    <HandleNotePrompt
-                      toolInvocation={toolInvocation}
-                      addToolResult={addToolResult}
-                      key={`${part.type}-${index}`}
-                    />
-                  );
-                default:
-                  return null;
-              }
-            }
+          case "tool-askForConfirmation":
+            return (
+              <HandleConfirmation
+                part={part}
+                addToolOutput={addToolOutput}
+                key={`${part.type}-${part.toolCallId}`}
+              />
+            );
+          case "tool-renderNoteUI":
+            return (
+              <HandleNotePrompt
+                part={part}
+                addToolOutput={addToolOutput}
+                key={`${part.type}-${part.toolCallId}`}
+              />
+            );
+          default:
+            return null;
         }
       })}
       {!isAIMessage && user?.imageUrl && (
@@ -254,42 +278,42 @@ function useDebounceCallback<T extends (...args: any[]) => void>(
 }
 
 function HandleConfirmation({
-  toolInvocation,
-  addToolResult,
+  part,
+  addToolOutput,
 }: {
-  toolInvocation: ToolInvocation;
-  addToolResult: AddToolResult;
+  part: ConfirmationPart;
+  addToolOutput: AddToolOutput;
 }) {
-  const toolCallId = toolInvocation.toolCallId;
+  if (part.state !== "input-available") return null;
+
   return (
-    <div
-      key={toolCallId}
-      className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2"
-    >
+    <div className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2">
       <p className="whitespace-pre-wrap">
-        {(toolInvocation.args.message as string).replaceAll("\\n", "\n")}
+        {part.input.message.replaceAll("\\n", "\n")}
       </p>
       <div className="flex w-full flex-row justify-between space-x-4">
         <Button
-          variant={"outline"}
+          variant="outline"
           className="w-full bg-blue-600 text-secondary hover:bg-blue-600/80"
           onClick={() => {
-            addToolResult({
-              toolCallId,
-              result: "Yes, confirmed.",
+            addToolOutput({
+              tool: "askForConfirmation",
+              toolCallId: part.toolCallId,
+              output: "Yes, confirmed.",
             });
-            console.log("ToolResult Added");
+            console.log("Tool output added");
           }}
         >
           Yes
         </Button>
         <Button
-          variant={"destructive"}
+          variant="destructive"
           className="w-full"
           onClick={() =>
-            addToolResult({
-              toolCallId,
-              result: "No, denied.",
+            addToolOutput({
+              tool: "askForConfirmation",
+              toolCallId: part.toolCallId,
+              output: "No, denied.",
             })
           }
         >
@@ -301,40 +325,41 @@ function HandleConfirmation({
 }
 
 function HandleNotePrompt({
-  toolInvocation,
-  addToolResult,
+  part,
+  addToolOutput,
 }: {
-  toolInvocation: ToolInvocation;
-  addToolResult: AddToolResult;
+  part: NotePromptPart;
+  addToolOutput: AddToolOutput;
 }) {
-  const toolCallId = toolInvocation.toolCallId;
-  const [title, setTitle] = useState(toolInvocation.args.title ?? "");
-  const [content, setContent] = useState(toolInvocation.args.content ?? "");
+  const [title, setTitle] = useState(part.input?.title ?? "");
+  const [content, setContent] = useState(part.input?.content ?? "");
+
+  if (part.state !== "input-available") return null;
 
   return (
     <form
-      key={toolCallId}
       className="flex w-full flex-col space-y-4 whitespace-pre-line rounded-md border px-3 py-2"
       onSubmit={(e) => {
         e.preventDefault();
-        addToolResult({
-          toolCallId,
-          result: {
+        addToolOutput({
+          tool: "renderNoteUI",
+          toolCallId: part.toolCallId,
+          output: {
             title,
             content,
           },
         });
-        console.log("ToolResult Added");
+        console.log("Tool output added");
       }}
     >
       <p className="whitespace-pre-wrap">
-        {(toolInvocation.args.message as string).replaceAll("\\n", "\n")}
+        {part.input.message.replaceAll("\\n", "\n")}
       </p>
       <div className="flex w-full flex-col space-y-4">
-        {!toolInvocation.args.title && (
+        {!part.input.title && (
           <div className="flex flex-row items-center space-x-2">
             <Label htmlFor="note-title" className="whitespace-nowrap">
-              {toolInvocation.args.titleLabel}
+              {part.input.titleLabel}
             </Label>
             <Input
               id="note-title"
@@ -344,10 +369,10 @@ function HandleNotePrompt({
           </div>
         )}
 
-        {!toolInvocation.args.content && (
+        {!part.input.content && (
           <div className="flex flex-row items-center space-x-2">
             <Label htmlFor="note-content" className="whitespace-nowrap">
-              {toolInvocation.args.contentLabel}
+              {part.input.contentLabel}
             </Label>
             <Input
               id="note-content"
@@ -360,26 +385,46 @@ function HandleNotePrompt({
         <Button
           type="submit"
           disabled={!title || !content}
-          variant={"outline"}
+          variant="outline"
           className="w-full bg-blue-600 text-secondary hover:bg-blue-600/80"
         >
-          {toolInvocation.args.createButtonLabel}
+          {part.input.createButtonLabel}
         </Button>
 
         <Button
           type="button"
-          variant={"destructive"}
+          variant="destructive"
           className="w-full"
           onClick={() =>
-            addToolResult({
-              toolCallId,
-              result: "Cancel note creation",
+            addToolOutput({
+              tool: "renderNoteUI",
+              toolCallId: part.toolCallId,
+              output: "Cancel note creation",
             })
           }
         >
-          {toolInvocation.args.cancelButtonLabel}
+          {part.input.cancelButtonLabel}
         </Button>
       </div>
     </form>
+  );
+}
+
+function needsClientToolOutput(messages: ChatUIMessage[]) {
+  const lastMessage = messages[messages.length - 1];
+  if (lastMessage?.role !== "assistant") return false;
+
+  return lastMessage.parts.some(
+    (part) =>
+      (part.type === "tool-askForConfirmation" ||
+        part.type === "tool-renderNoteUI") &&
+      (part.state === "input-streaming" || part.state === "input-available"),
+  );
+}
+
+function hasCompletedMakeNoteTool(message: ChatUIMessage) {
+  return message.parts.some(
+    (part) =>
+      part.type === "tool-makeNote" && part.state === "output-available",
   );
 }

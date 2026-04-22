@@ -1,5 +1,5 @@
-import { cn } from "@/lib/utils";
 import { Bot } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { BouncingDots } from "./BouncingDots";
 
 export function AIThinkingIndicator() {

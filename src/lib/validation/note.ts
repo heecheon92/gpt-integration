@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 
 export const createNoteSchema = z.object({
   title: z

@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 import { gptIndex } from "@/lib/db/pinecone";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -5,8 +7,6 @@ import {
   deleteNoteSchema,
   updateNoteSchema,
 } from "@/lib/validation/note";
-import { auth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
 import { createNote, updateNote } from "./util";
 
 export async function POST(req: NextRequest) {

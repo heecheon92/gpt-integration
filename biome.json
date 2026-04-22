@@ -1,0 +1,511 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.12/schema.json",
+  "vcs": {
+    "enabled": false,
+    "clientKind": "git",
+    "useIgnoreFile": false
+  },
+  "files": {
+    "ignoreUnknown": false,
+    "maxSize": 104857600,
+    "includes": [
+      "**",
+      "!node_modules",
+      "!build",
+      "!.next",
+      "!.agents",
+      "!.husky",
+      "!.vscode",
+      "!next-env.d.ts",
+      "!.omx"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80,
+    "attributePosition": "auto",
+    "bracketSameLine": false,
+    "bracketSpacing": true,
+    "expand": "auto",
+    "useEditorconfig": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": false,
+      "a11y": {
+        "noAriaUnsupportedElements": "warn",
+        "useAltText": "warn",
+        "useAriaPropsForRole": "warn",
+        "useAriaPropsSupportedByRole": "warn",
+        "useValidAriaProps": "warn",
+        "useValidAriaValues": "warn"
+      },
+      "complexity": {
+        "noArguments": "error",
+        "noUselessThisAlias": "error",
+        "noUselessTypeConstraint": "error"
+      },
+      "correctness": {
+        "noChildrenProp": "error",
+        "noConstAssign": "off",
+        "noGlobalObjectCalls": "off",
+        "noInvalidBuiltinInstantiation": "off",
+        "noInvalidConstructorSuper": "off",
+        "noSetterReturn": "off",
+        "noUndeclaredVariables": "off",
+        "noUnreachable": "off",
+        "noUnreachableSuper": "off",
+        "noUnusedVariables": "error",
+        "useExhaustiveDependencies": "warn",
+        "useHookAtTopLevel": "error",
+        "useJsxKeyInIterable": "error"
+      },
+      "security": {
+        "noBlankTarget": "error",
+        "noDangerouslySetInnerHtmlWithChildren": "error"
+      },
+      "style": {
+        "noCommonJs": "error",
+        "noNamespace": "error",
+        "useArrayLiterals": "error",
+        "useAsConstAssertion": "error",
+        "useConst": "error"
+      },
+      "suspicious": {
+        "noClassAssign": "off",
+        "noCommentText": "error",
+        "noDuplicateClassMembers": "off",
+        "noDuplicateJsxProps": "error",
+        "noDuplicateObjectKeys": "off",
+        "noDuplicateParameters": "off",
+        "noExplicitAny": "error",
+        "noExtraNonNullAssertion": "error",
+        "noFunctionAssign": "off",
+        "noImportAssign": "off",
+        "noMisleadingInstantiator": "error",
+        "noRedeclare": "off",
+        "noTsIgnore": "error",
+        "noUnsafeDeclarationMerging": "error",
+        "noUnsafeNegation": "off",
+        "noVar": "error",
+        "useGetterReturn": "off",
+        "useNamespaceKeyword": "error"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "jsxQuoteStyle": "double",
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "all",
+      "semicolons": "always",
+      "arrowParentheses": "always",
+      "bracketSameLine": false,
+      "quoteStyle": "double",
+      "attributePosition": "auto",
+      "bracketSpacing": true
+    },
+    "globals": [
+      "onanimationend",
+      "exports",
+      "onanimationiteration",
+      "onlostpointercapture",
+      "onkeyup",
+      "onmousedown",
+      "onanimationstart",
+      "onprogress",
+      "onpause",
+      "onended",
+      "onpointerover",
+      "ondrag",
+      "onchange",
+      "onbeforeinstallprompt",
+      "onmessage",
+      "onabort",
+      "onpointerdown",
+      "onpointerout",
+      "oncuechange",
+      "ongotpointercapture",
+      "onsearch",
+      "onsubmit",
+      "onstalled",
+      "onreset",
+      "onsuspend",
+      "onerror",
+      "onmouseenter",
+      "onresize",
+      "ondragover",
+      "onmouseover",
+      "onpagehide",
+      "onmousemove",
+      "onratechange",
+      "onmessageerror",
+      "ondevicemotion",
+      "onwheel",
+      "onauxclick",
+      "ontransitionend",
+      "onpageshow",
+      "ononline",
+      "onselect",
+      "onkeydown",
+      "onclose",
+      "ondeviceorientationabsolute",
+      "onpointercancel",
+      "ondragleave",
+      "onseeked",
+      "onwaiting",
+      "onvolumechange",
+      "onbeforeunload",
+      "onplaying",
+      "ondragend",
+      "onstorage",
+      "onloadeddata",
+      "onfocus",
+      "onoffline",
+      "onplay",
+      "onafterprint",
+      "onclick",
+      "onmouseout",
+      "ondblclick",
+      "oncanplay",
+      "onloadstart",
+      "onappinstalled",
+      "onpointermove",
+      "ontoggle",
+      "oncontextmenu",
+      "onblur",
+      "oncancel",
+      "onbeforeprint",
+      "onloadedmetadata",
+      "onpointerup",
+      "onlanguagechange",
+      "onscroll",
+      "onload",
+      "ondragstart",
+      "oncanplaythrough",
+      "oninput",
+      "oninvalid",
+      "ontimeupdate",
+      "ondurationchange",
+      "onmouseup",
+      "location",
+      "onkeypress",
+      "onpointerleave",
+      "ondrop",
+      "ondeviceorientation",
+      "onseeking",
+      "OffscreenCanvas",
+      "onunload",
+      "onmouseleave",
+      "onrejectionhandled",
+      "onhashchange",
+      "onpointerenter",
+      "onmousewheel",
+      "onunhandledrejection",
+      "ondragenter",
+      "onpopstate",
+      "onemptied"
+    ]
+  },
+  "html": {
+    "formatter": {
+      "selfCloseVoidElements": "always"
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.{js,mjs,cjs,ts,mts,jsx,tsx}"],
+      "javascript": {
+        "globals": []
+      },
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noUselessCatch": "error",
+            "noUselessEscapeInRegex": "warn"
+          },
+          "correctness": {
+            "noUnusedImports": "error",
+            "noUnusedVariables": "error",
+            "useExhaustiveDependencies": "off",
+            "useJsxKeyInIterable": "error"
+          },
+          "style": {
+            "noCommonJs": "error",
+            "noDefaultExport": "error",
+            "noInferrableTypes": "off",
+            "useConst": "error"
+          },
+          "suspicious": {
+            "noEmptyBlockStatements": "off",
+            "noExplicitAny": "off",
+            "useAwait": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "*.config.{js,mjs,cjs,ts,mts,jsx,tsx}",
+        "**/manifest.{js,ts}",
+        "**/*.d.ts",
+        "**/default.{jsx,tsx}",
+        "**/error.{jsx,tsx}",
+        "**/global-error.{jsx,tsx}",
+        "**/forbidden.{jsx,tsx}",
+        "**/instrumentation.{jsx,tsx}",
+        "**/layout.{jsx,tsx}",
+        "**/loading.{jsx,tsx}",
+        "**/mdx-components.{jsx,tsx}",
+        "**/not-found.{jsx,tsx}",
+        "**/page.{jsx,tsx}",
+        "**/template.{jsx,tsx}",
+        "**/unauthorized.{jsx,tsx}",
+        "**/opengraph-image.{jsx,tsx}",
+        "**/proxy.{js,ts}"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["*.config.{js,mjs,cjs,ts,mts,jsx,tsx}"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noCommonJs": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.{jsx,tsx}"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/action.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.{js,mjs,cjs,ts,mts,jsx,tsx}"],
+      "javascript": {
+        "globals": []
+      },
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noUselessCatch": "error",
+            "noUselessEscapeInRegex": "warn"
+          },
+          "correctness": {
+            "noUnusedImports": "error",
+            "noUnusedVariables": "error",
+            "useExhaustiveDependencies": "off",
+            "useJsxKeyInIterable": "error"
+          },
+          "style": {
+            "noCommonJs": "error",
+            "noDefaultExport": "error",
+            "noInferrableTypes": "off",
+            "useConst": "error"
+          },
+          "suspicious": {
+            "noEmptyBlockStatements": "off",
+            "noExplicitAny": "off",
+            "useAwait": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "*.config.{js,mjs,cjs,ts,mts,jsx,tsx}",
+        "**/manifest.{js,ts}",
+        "**/*.d.ts",
+        "**/default.{jsx,tsx}",
+        "**/error.{jsx,tsx}",
+        "**/global-error.{jsx,tsx}",
+        "**/forbidden.{jsx,tsx}",
+        "**/instrumentation.{jsx,tsx}",
+        "**/layout.{jsx,tsx}",
+        "**/loading.{jsx,tsx}",
+        "**/mdx-components.{jsx,tsx}",
+        "**/not-found.{jsx,tsx}",
+        "**/page.{jsx,tsx}",
+        "**/template.{jsx,tsx}",
+        "**/unauthorized.{jsx,tsx}"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["*.config.{js,mjs,cjs,ts,mts,jsx,tsx}"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noCommonJs": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.{jsx,tsx}"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/action.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.{js,mjs,cjs,ts,mts,jsx,tsx}"],
+      "javascript": {
+        "globals": []
+      },
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noUselessCatch": "error",
+            "noUselessEscapeInRegex": "warn"
+          },
+          "correctness": {
+            "noUnusedImports": "error",
+            "noUnusedVariables": "error",
+            "useExhaustiveDependencies": "off",
+            "useJsxKeyInIterable": "error"
+          },
+          "nursery": {
+            "noFloatingPromises": "error"
+          },
+          "style": {
+            "noCommonJs": "error",
+            "noDefaultExport": "error",
+            "noInferrableTypes": "off",
+            "useConst": "error"
+          },
+          "suspicious": {
+            "noEmptyBlockStatements": "off",
+            "noExplicitAny": "off",
+            "useAwait": "error"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "*.config.{js,mjs,cjs,ts,mts,jsx,tsx}",
+        "**/manifest.{js,ts}",
+        "**/*.d.ts",
+        "**/default.{jsx,tsx}",
+        "**/error.{jsx,tsx}",
+        "**/global-error.{jsx,tsx}",
+        "**/forbidden.{jsx,tsx}",
+        "**/instrumentation.{jsx,tsx}",
+        "**/layout.{jsx,tsx}",
+        "**/loading.{jsx,tsx}",
+        "**/mdx-components.{jsx,tsx}",
+        "**/not-found.{jsx,tsx}",
+        "**/page.{jsx,tsx}",
+        "**/template.{jsx,tsx}",
+        "**/unauthorized.{jsx,tsx}"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["*.config.{js,mjs,cjs,ts,mts,jsx,tsx}"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noCommonJs": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.{jsx,tsx}"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "warn"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/action.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useAwait": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/proxy.{js,ts}"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off"
+          }
+        }
+      }
+    }
+  ],
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
+}

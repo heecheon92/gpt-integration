@@ -1,14 +1,14 @@
+import { tool } from "ai";
+import { endOfDay } from "date-fns/endOfDay";
+import { startOfDay } from "date-fns/startOfDay";
+import { toZonedTime } from "date-fns-tz/toZonedTime";
+import { z } from "zod";
 import {
   EMBEDDING_FILTER_TAG_KEY,
   EMBEDDING_NOTES_FILTER_TAG,
 } from "@/constants";
 import { gptIndex } from "@/lib/db/pinecone";
 import { prisma } from "@/lib/db/prisma";
-import { tool } from "ai";
-import { toZonedTime } from "date-fns-tz/toZonedTime";
-import { endOfDay } from "date-fns/endOfDay";
-import { startOfDay } from "date-fns/startOfDay";
-import { z } from "zod";
 import { createNote } from "./util";
 
 export function noteTools({
@@ -23,7 +23,7 @@ export function noteTools({
   return {
     getNotes: tool({
       description: "Get the notes for the user",
-      parameters: z.object({
+      inputSchema: z.object({
         daterange: z
           .object({
             from: z.string().datetime(),
@@ -84,7 +84,7 @@ export function noteTools({
     }),
     makeNote: tool({
       description: "Create a note based on user's request",
-      parameters: z.object({
+      inputSchema: z.object({
         title: z.string(),
         content: z.string(),
       }),
@@ -101,17 +101,18 @@ export function noteTools({
     }),
     askForConfirmation: tool({
       description: "Ask the user for confirmation to create the note.",
-      parameters: z.object({
+      inputSchema: z.object({
         message: z
           .string()
           .describe(
             "The message to ask for confirmation with summary of the note including the title and content.",
           ),
       }),
+      outputSchema: z.string(),
     }),
     renderNoteUI: tool({
       description: "Prompt the user to provide the note data via UI.",
-      parameters: z.object({
+      inputSchema: z.object({
         message: z
           .string()
           .describe(
@@ -147,11 +148,18 @@ export function noteTools({
           .string()
           .describe("The label for the cancel button"),
       }),
+      outputSchema: z.union([
+        z.object({
+          title: z.string(),
+          content: z.string(),
+        }),
+        z.string(),
+      ]),
     }),
     getUserDatetime: tool({
       description: "Get the current datetime",
-      parameters: z.object({}),
-      execute: async () => {
+      inputSchema: z.object({}),
+      execute: () => {
         const now = new Date();
         if (!timezone) {
           return {
