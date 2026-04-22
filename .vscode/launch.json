@@ -5,7 +5,7 @@
       "name": "Next.js: debug server-side",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev"
+      "command": "pnpm dev"
     },
     {
       "name": "Next.js: debug client-side",
@@ -17,7 +17,7 @@
       "name": "Next.js: [debug] full stack https",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev:secure",
+      "command": "pnpm dev:secure",
       "serverReadyAction": {
         "pattern": "- Local:.+(https?://.+)",
         "uriFormat": "%s",
@@ -28,7 +28,7 @@
       "name": "Next.js: [debug] full stack https (turbopack)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev:turbo:secure",
+      "command": "pnpm dev:turbo:secure",
       "serverReadyAction": {
         "pattern": "- Local:.+(https?://.+)",
         "uriFormat": "%s",
@@ -39,7 +39,7 @@
       "name": "Next.js: [debug] full stack",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev",
+      "command": "pnpm dev",
       "serverReadyAction": {
         "pattern": "- Local:.+(https?://.+)",
         "uriFormat": "%s",
@@ -50,7 +50,7 @@
       "name": "Next.js: [debug] full stack (turbopack)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev:turbo",
+      "command": "pnpm dev:turbo",
       "serverReadyAction": {
         "pattern": "- Local:.+(https?://.+)",
         "uriFormat": "%s",
@@ -61,7 +61,7 @@
       "name": "Next.js: [prod] full stack",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run build && npm run start",
+      "command": "pnpm build && pnpm start",
       "serverReadyAction": {
         "pattern": "- Local:.+(https?://.+)",
         "uriFormat": "%s",
