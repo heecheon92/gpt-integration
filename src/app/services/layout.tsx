@@ -4,7 +4,7 @@ import { NavBar } from "./components/NavBar";
 export const metadata: Metadata = {
   title: "FlowBrain - Services",
 };
-export default async function ServicesLayout({
+export default function ServicesLayout({
   children,
 }: {
   children: React.ReactNode;

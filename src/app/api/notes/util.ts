@@ -82,7 +82,7 @@ export async function updateNote({
   return updatedNote;
 }
 
-export async function getEmbeddingForNote(
+export function getEmbeddingForNote(
   title: string,
   content: string | undefined,
 ) {

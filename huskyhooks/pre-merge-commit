@@ -1,0 +1,16 @@
+#!/bin/sh
+
+. "$(dirname "$0")/pnpm.sh"
+
+echo "Running project quality check."
+
+run_pnpm biome
+biomeStatus=$?
+
+if [ $biomeStatus -ne 0 ]; then
+    echo "Project quality check has failed."
+    echo "Please fix the errors before merging the commit."
+    exit 1
+fi
+
+exit 0

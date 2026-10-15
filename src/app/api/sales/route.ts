@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   EMBEDDING_FILTER_TAG_KEY,
   EMBEDDING_SALES_FILTER_TAG,
@@ -10,9 +12,6 @@ import {
   deleteRecordSchema,
   updateRecordSchema,
 } from "@/lib/validation/record";
-
-import { auth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
@@ -158,7 +157,7 @@ export async function DELETE(req: NextRequest) {
   }
 }
 
-async function getEmbeddingForRecord(
+function getEmbeddingForRecord(
   productName: string,
   price: number | undefined,
   soldAt: string | undefined,

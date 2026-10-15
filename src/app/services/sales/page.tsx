@@ -1,6 +1,6 @@
+import { auth } from "@clerk/nextjs/server";
 import { Record } from "@/components/Record";
 import { prisma } from "@/lib/db/prisma";
-import { auth } from "@clerk/nextjs/server";
 
 export default async function NotePages() {
   const { userId } = await auth();

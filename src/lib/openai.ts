@@ -19,6 +19,5 @@ export async function getEmbedding(value: string) {
   });
   if (!embedding) throw new Error("Error generating embedding.");
 
-  console.log(embedding);
   return embedding;
 }
