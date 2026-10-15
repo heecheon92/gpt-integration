@@ -95,7 +95,7 @@ export async function DELETE(req: NextRequest) {
         where: { id },
       });
       try {
-        await gptIndex.deleteOne(id);
+        await gptIndex.deleteOne({ id });
       } catch (error) {
         console.error(error);
       }

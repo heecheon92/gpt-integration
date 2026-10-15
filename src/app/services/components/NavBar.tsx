@@ -53,7 +53,7 @@ export function NavBar() {
             </Button>
             <UserButton
               appearance={{
-                baseTheme: theme === "dark" ? dark : undefined,
+                theme: theme === "dark" ? dark : undefined,
                 elements: { avatarBox: { width: "2.5rem", height: "2.5rem" } },
               }}
             />

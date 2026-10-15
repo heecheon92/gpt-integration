@@ -4,8 +4,8 @@ export const createRecordSchema = z.object({
   productName: z
     .string()
     .min(1, { message: "Product name must be at least 1 character long" }),
-  price: z.coerce.number(),
-  soldAt: z.preprocess((val) => {
+  price: z.coerce.number<string | number>(),
+  soldAt: z.preprocess((val: string) => {
     if (typeof val === "string") {
       const date = new Date(val);
       if (isNaN(date.getTime())) {
@@ -24,6 +24,7 @@ export const deleteRecordSchema = z.object({
   id: z.string().min(1),
 });
 
+export type CreateRecordInput = z.input<typeof createRecordSchema>;
 export type CreateRecordSchema = z.infer<typeof createRecordSchema>;
 export type UpdateRecordSchema = z.infer<typeof updateRecordSchema>;
 export type DeleteRecordSchema = z.infer<typeof deleteRecordSchema>;

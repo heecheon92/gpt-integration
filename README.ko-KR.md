@@ -101,7 +101,7 @@ assistant는 다음 도메인 툴을 사용할 수 있습니다.
 | Framework | Next.js 16 App Router |
 | UI | React 19, Tailwind CSS 4, shadcn/Base UI |
 | Auth | Clerk |
-| AI orchestration | Vercel AI SDK 6 |
+| AI orchestration | Vercel AI SDK 7 |
 | Model provider | OpenAI via `@ai-sdk/openai` |
 | Vector search | Pinecone |
 | Database | MongoDB with Prisma |
@@ -122,8 +122,8 @@ assistant는 다음 도메인 툴을 사용할 수 있습니다.
 
 ### Prerequisites
 
-- 현재 Next.js 버전과 호환되는 Node.js
-- pnpm
+- Node.js 22 이상 (Node.js 24 LTS 권장)
+- `package.json`에 고정된 pnpm 12.11.2
 - MongoDB database
 - Pinecone index
 - Clerk application
@@ -151,6 +151,17 @@ pnpm install
 ```
 
 `postinstall`에서 Prisma client generation이 실행됩니다.
+
+[Prisma 7은 아직 MongoDB를 지원하지 않으므로](https://www.prisma.io/docs/orm/overview/databases/mongodb)
+Prisma는 최신 안정 6.x 릴리스를 사용합니다. 나머지 직접 의존성은 안정
+릴리스를 사용하며, 설치 버전은 `pnpm-lock.yaml`에 기록됩니다. pnpm 빌드
+권한과 React 타입 override는 `pnpm-workspace.yaml`에서 관리합니다.
+
+pnpm 12는 의존성의 배포 후 경과 시간을 확인합니다. 최신 lockfile 설치 시
+`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`이 발생하면 해당 검사를 통과할 때까지
+기다리세요. 검토한 당일 릴리스를 의도적으로 설치할 때만
+`PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install --frozen-lockfile`을 사용하세요.
+이 설정은 해당 명령에만 적용되며 프로젝트의 기본 보호 설정은 유지됩니다.
 
 ### Run locally
 

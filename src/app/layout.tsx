@@ -29,22 +29,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider afterSignOutUrl={"/"}>
-      <html
-        suppressHydrationWarning
-        lang="en"
-        className={cn(
-          "antialiased",
-          geistSans.variable,
-          geistMono.variable,
-          "font-sans",
-          inter.variable,
-        )}
-      >
-        <body>
+    <html
+      suppressHydrationWarning
+      lang="en"
+      className={cn(
+        "antialiased",
+        geistSans.variable,
+        geistMono.variable,
+        "font-sans",
+        inter.variable,
+      )}
+    >
+      <body>
+        <ClerkProvider afterSignOutUrl={"/"}>
           <ThemeProvider attribute={"class"}>{children}</ThemeProvider>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

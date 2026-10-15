@@ -25,8 +25,8 @@ export function salesTools({
       inputSchema: z.object({
         daterange: z
           .object({
-            from: z.string().datetime(),
-            to: z.string().datetime(),
+            from: z.iso.datetime(),
+            to: z.iso.datetime(),
           })
           .optional(),
       }),

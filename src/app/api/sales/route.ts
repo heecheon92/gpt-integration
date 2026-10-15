@@ -43,19 +43,21 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await gptIndex.upsert([
-        {
-          id: record.id,
-          values: embedding,
-          metadata: {
-            userId,
-            productName,
-            price,
-            soldAt,
-            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_SALES_FILTER_TAG,
+      await gptIndex.upsert({
+        records: [
+          {
+            id: record.id,
+            values: embedding,
+            metadata: {
+              userId,
+              productName,
+              price,
+              soldAt,
+              [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_SALES_FILTER_TAG,
+            },
           },
-        },
-      ]);
+        ],
+      });
 
       return record;
     });
@@ -99,16 +101,18 @@ export async function PUT(req: NextRequest) {
           userId,
         },
       });
-      await gptIndex.upsert([
-        {
-          id: updatedRecord.id,
-          values: embedding,
-          metadata: {
-            userId,
-            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_SALES_FILTER_TAG,
+      await gptIndex.upsert({
+        records: [
+          {
+            id: updatedRecord.id,
+            values: embedding,
+            metadata: {
+              userId,
+              [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_SALES_FILTER_TAG,
+            },
           },
-        },
-      ]);
+        ],
+      });
       return updatedRecord;
     });
     return NextResponse.json(updatedRecord, { status: 200 });
@@ -144,7 +148,7 @@ export async function DELETE(req: NextRequest) {
         where: { id },
       });
       try {
-        await gptIndex.deleteOne(id);
+        await gptIndex.deleteOne({ id });
       } catch (error) {
         console.error(error);
       }

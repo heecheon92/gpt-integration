@@ -27,16 +27,18 @@ export async function createNote({
       },
     });
 
-    await gptIndex.upsert([
-      {
-        id: note.id,
-        values: embedding,
-        metadata: {
-          userId,
-          [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
+    await gptIndex.upsert({
+      records: [
+        {
+          id: note.id,
+          values: embedding,
+          metadata: {
+            userId,
+            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
+          },
         },
-      },
-    ]);
+      ],
+    });
 
     return note;
   });
@@ -65,16 +67,18 @@ export async function updateNote({
       },
     });
 
-    await gptIndex.upsert([
-      {
-        id: updatedNote.id,
-        values: embedding,
-        metadata: {
-          userId,
-          [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
+    await gptIndex.upsert({
+      records: [
+        {
+          id: updatedNote.id,
+          values: embedding,
+          metadata: {
+            userId,
+            [EMBEDDING_FILTER_TAG_KEY]: EMBEDDING_NOTES_FILTER_TAG,
+          },
         },
-      },
-    ]);
+      ],
+    });
 
     return updatedNote;
   });

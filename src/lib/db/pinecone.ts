@@ -10,4 +10,6 @@ const pinecone = new Pinecone({
   apiKey,
 });
 
-export const gptIndex = pinecone.Index(process.env.PINECONE_DB_INDEX_NAME!);
+export const gptIndex = pinecone.index({
+  name: process.env.PINECONE_DB_INDEX_NAME!,
+});

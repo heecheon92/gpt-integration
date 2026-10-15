@@ -5,7 +5,10 @@ import type { SalesRecord } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import type { CreateRecordSchema } from "@/lib/validation/record";
+import type {
+  CreateRecordInput,
+  CreateRecordSchema,
+} from "@/lib/validation/record";
 import { createRecordSchema } from "@/lib/validation/record";
 import {
   Dialog,
@@ -32,7 +35,7 @@ export function AddSalesRecordDialog({
 }: AddSalesRecordDialogProps) {
   const [deleteInProgress, setDeleteInProgress] = useState(false);
   const router = useRouter();
-  const form = useForm<CreateRecordSchema>({
+  const form = useForm<CreateRecordInput, unknown, CreateRecordSchema>({
     resolver: zodResolver(createRecordSchema),
     defaultValues: {
       productName: recordToEdit?.productName ?? "",

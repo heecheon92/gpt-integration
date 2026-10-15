@@ -101,7 +101,7 @@ Client-only tools are typed from the server tool definitions using AI SDK `Infer
 | Framework | Next.js 16 App Router |
 | UI | React 19, Tailwind CSS 4, shadcn/Base UI |
 | Auth | Clerk |
-| AI orchestration | Vercel AI SDK 6 |
+| AI orchestration | Vercel AI SDK 7 |
 | Model provider | OpenAI via `@ai-sdk/openai` |
 | Vector search | Pinecone |
 | Database | MongoDB with Prisma |
@@ -122,8 +122,8 @@ Client-only tools are typed from the server tool definitions using AI SDK `Infer
 
 ### Prerequisites
 
-- Node.js compatible with the current Next.js version
-- pnpm
+- Node.js 22 or newer (Node.js 24 LTS recommended)
+- pnpm 12.11.2, pinned in `package.json`
 - MongoDB database
 - Pinecone index
 - Clerk application
@@ -151,6 +151,18 @@ pnpm install
 ```
 
 `postinstall` runs Prisma client generation.
+
+Prisma stays on the latest stable 6.x release because [Prisma 7 does not yet
+support MongoDB](https://www.prisma.io/docs/orm/overview/databases/mongodb).
+Other direct dependencies target stable releases; `pnpm-lock.yaml` records
+the installed versions. pnpm build permissions and React type overrides live
+in `pnpm-workspace.yaml`.
+
+pnpm 12 checks dependency release age. If a freshly updated lockfile triggers
+`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, wait until the releases pass that
+check. For an intentional, reviewed same-day update, use
+`PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install --frozen-lockfile`; the override
+is command-scoped and does not disable the project's default protection.
 
 ### Run locally
 

@@ -209,7 +209,7 @@ function ChatMessage({
         switch (part.type) {
           case "text":
             return (
-              <Markdown
+              <div
                 key={`${part.type}-${index}`}
                 className={cn(
                   "rounded-md border px-3 py-2 leading-6",
@@ -218,8 +218,8 @@ function ChatMessage({
                     : "bg-primary text-primary-foreground",
                 )}
               >
-                {part.text}
-              </Markdown>
+                <Markdown>{part.text}</Markdown>
+              </div>
             );
           case "tool-askForConfirmation":
             return (

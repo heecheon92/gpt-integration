@@ -4,8 +4,8 @@ import {
   convertToModelMessages,
   generateId,
   generateText,
+  isStepCount,
   Output,
-  stepCountIs,
   streamText,
   UIMessage,
 } from "ai";
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
 
     const result = streamText({
       model: openai.chat("gpt-4o"),
-      system:
+      instructions:
         "You are an intelligent note-taking app. Here are some relevant notes for you: " +
         "The relevant notes for this query are:\n" +
         relevantNotes
@@ -172,7 +172,7 @@ async function handleNoteRequest({
   const tools = noteTools({ userId, embedding, timezone });
   const result = streamText({
     model: openai.chat("gpt-4o"),
-    system:
+    instructions:
       "This is a system message to ask you to create a response message for the user's query.\n" +
       "Upon user's request to create a note, if user's initial query include both title and content,\n" +
       "create a note based on user's request.\n" +
@@ -183,7 +183,7 @@ async function handleNoteRequest({
       "Make sure that you respond to the user with the corresponding language of the content.\n",
     messages: await convertToModelMessages(messages, { tools }),
     tools,
-    stopWhen: stepCountIs(5),
+    stopWhen: isStepCount(5),
   });
 
   return result.toUIMessageStreamResponse({
@@ -206,14 +206,14 @@ async function handleSalesRecordRequest({
   const tools = salesTools({ userId, embedding, timezone });
   const result = streamText({
     model: openai.chat("gpt-4o"),
-    system:
+    instructions:
       "This is a system message to ask you to create a response message for the user's query.\n" +
       "You can lookup user's sales record but not allowed to create, edit or delete a record\n" +
       `Please respond to the user accordingly.\n` +
       `Make sure that you respond to the user with the corresponding language of the content.\n`,
     messages: await convertToModelMessages(messages, { tools }),
     tools,
-    stopWhen: stepCountIs(5),
+    stopWhen: isStepCount(5),
   });
 
   return result.toUIMessageStreamResponse({
