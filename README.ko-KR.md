@@ -114,7 +114,9 @@ assistant는 다음 도메인 툴을 사용할 수 있습니다.
 - **Auth-first AI route**: `/api/chat`는 임베딩, classifier 호출, Pinecone 쿼리, Prisma 조회 전에 인증되지 않은 요청을 반환합니다.
 - **User-scoped retrieval**: Pinecone 쿼리에 `userId` metadata filter를 포함해 채팅 컨텍스트를 로그인한 사용자 데이터로 제한합니다.
 - **UI message protocol**: 서버 응답은 AI SDK UI message stream을 사용하며, 클라이언트는 typed `tool-*` part를 렌더링합니다.
-- **Tool continuation**: 클라이언트 툴 출력은 `addToolOutput`과 `lastAssistantMessageIsCompleteWithToolCalls`를 사용해 사용자 상호작용 후 assistant loop를 재개합니다.
+- **Tool continuation**: 완료된 클라이언트 확인/입력 폼 툴만 자동으로 대화를 이어갑니다. 서버 툴 결과만 있는 경우에는 요청을 다시 전송하지 않습니다.
+- **Visible chat outcomes**: 툴 진행/결과를 표시하고, 표시할 답변이 없으면 명시적인 상태 메시지를 보여줍니다. Reasoning metadata는 화면에 노출하지 않고 그대로 유지합니다.
+- **Error recovery**: 실패하거나 완료되지 않은 스트림에는 복구 안내를 표시합니다. **Start new chat**은 대화와 오류 상태를 초기화할 뿐 요청을 재시도하거나 이미 완료된 작업을 되돌리지 않습니다. 노트 생성 요청을 반복하기 전에 기존 노트를 확인하세요.
 - **Embedding compatibility**: 별도 벡터 reindex migration이 없다면 현재 임베딩 모델을 유지합니다.
 - **Typecheck-first linting**: `pnpm lint`는 Biome 전에 `tsc --noEmit`을 실행해 SDK 계약 변경을 lint-only 체크보다 먼저 잡습니다.
 

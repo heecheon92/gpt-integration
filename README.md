@@ -114,7 +114,9 @@ Client-only tools are typed from the server tool definitions using AI SDK `Infer
 - **Auth-first AI route**: `/api/chat` returns unauthorized responses before embeddings, classifier calls, Pinecone queries, or Prisma reads.
 - **User-scoped retrieval**: Pinecone queries include `userId` metadata filters so chat context is scoped to the authenticated user.
 - **UI message protocol**: server responses use AI SDK UI message streams; the client renders typed `tool-*` parts.
-- **Tool continuation**: client tool outputs use `addToolOutput` and `lastAssistantMessageIsCompleteWithToolCalls` to resume the assistant loop after user interaction.
+- **Tool continuation**: automatic continuation is limited to completed client confirmation/form tools. Server-only tool results do not resubmit the request.
+- **Visible chat outcomes**: the chat shows tool progress/results and an explicit status if the assistant returns no visible answer. Reasoning metadata remains hidden and intact.
+- **Error recovery**: failed or incomplete streams show a recovery notice. **Start new chat** clears the conversation and error state without retrying the request or undoing completed actions; check your notes before repeating a creation request.
 - **Embedding compatibility**: the app preserves the current embedding model unless a separate vector reindex migration is planned.
 - **Typecheck-first linting**: `pnpm lint` runs `tsc --noEmit` before Biome, catching SDK contract drift that lint-only checks miss.
 
