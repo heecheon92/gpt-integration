@@ -51,7 +51,7 @@ Next.js API routes
   └─ /api/chat        AI orchestration route
        ├─ auth boundary
        ├─ UIMessage -> ModelMessage conversion
-       ├─ OpenAI chat model calls
+       ├─ OpenAI Responses API (GPT-6 Luna)
        ├─ OpenAI embeddings
        ├─ Pinecone vector retrieval
        ├─ Prisma user data lookup
@@ -77,7 +77,7 @@ The chat route follows a retrieval and tool-calling pipeline:
 9. Let the assistant call typed tools when the request should use a product action.
 10. Return a `toUIMessageStreamResponse` stream to the client.
 
-The implementation uses explicit `openai.chat("gpt-4o")` for language-model calls to preserve Chat Completions-style behavior while still running on the current Vercel AI SDK. Embeddings remain on `text-embedding-ada-002` to avoid invalidating existing Pinecone vectors.
+Language-model calls use `openai.responses("gpt-6-luna")`: `medium` reasoning for answers and note/sales tool orchestration, and `none` for the three-way query classifier. Responses use `store: false`; conversation history stays application-managed rather than relying on stored response IDs. Reasoning summaries are disabled, while encrypted reasoning metadata is retained in the UI message history for tool continuation and is not rendered. Embeddings remain on `text-embedding-ada-002` to preserve existing Pinecone vectors.
 
 ## AI tools
 
@@ -122,7 +122,7 @@ Client-only tools are typed from the server tool definitions using AI SDK `Infer
 
 ### Prerequisites
 
-- Node.js 22 or newer (Node.js 24 LTS recommended)
+- Node.js 22.x (also pinned for Vercel in `package.json`)
 - pnpm 12.11.2, pinned in `package.json`
 - MongoDB database
 - Pinecone index
@@ -158,11 +158,15 @@ Other direct dependencies target stable releases; `pnpm-lock.yaml` records
 the installed versions. pnpm build permissions and React type overrides live
 in `pnpm-workspace.yaml`.
 
-pnpm 12 checks dependency release age. If a freshly updated lockfile triggers
-`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`, wait until the releases pass that
-check. For an intentional, reviewed same-day update, use
-`PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install --frozen-lockfile`; the override
-is command-scoped and does not disable the project's default protection.
+pnpm enforces a 24-hour minimum release age. `pnpm-workspace.yaml` lists
+exact-version exceptions for the selected stable upgrade, including transitive
+and platform-specific packages. This allows local and Vercel installs of the
+same lockfile without disabling the policy globally or setting an environment
+override. New versions remain subject to the gate; review any new exception.
+
+On Vercel, use Node.js **22.x**, the default `pnpm install` install command,
+and `pnpm build`. The `engines` field prevents automatic Node major upgrades.
+Keep the environment variables above configured in the deployment environment.
 
 ### Run locally
 

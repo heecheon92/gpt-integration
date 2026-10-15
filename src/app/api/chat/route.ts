@@ -1,4 +1,7 @@
-import { openai } from "@ai-sdk/openai";
+import {
+  type OpenAILanguageModelResponsesOptions,
+  openai,
+} from "@ai-sdk/openai";
 import { auth } from "@clerk/nextjs/server";
 import {
   convertToModelMessages,
@@ -34,6 +37,18 @@ const embeddingFilterSchema = z.object({
 });
 
 type EmbeddingFilterTag = (typeof embeddingFilterTags)[number];
+
+const responseOptions = {
+  store: false,
+  reasoningSummary: null,
+} satisfies OpenAILanguageModelResponsesOptions;
+
+const answerProviderOptions = {
+  openai: {
+    ...responseOptions,
+    reasoningEffort: "medium",
+  } satisfies OpenAILanguageModelResponsesOptions,
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -105,7 +120,8 @@ export async function POST(req: NextRequest) {
     console.log("Relevant records found: ", relevantRecords.length);
 
     const result = streamText({
-      model: openai.chat("gpt-4o"),
+      model: openai.responses("gpt-6-luna"),
+      providerOptions: answerProviderOptions,
       instructions:
         "You are an intelligent note-taking app. Here are some relevant notes for you: " +
         "The relevant notes for this query are:\n" +
@@ -127,6 +143,8 @@ export async function POST(req: NextRequest) {
     return result.toUIMessageStreamResponse({
       originalMessages: messages,
       generateMessageId: generateId,
+      // Keep encrypted reasoning metadata for stateless history replay.
+      sendReasoning: true,
     });
   } catch (error) {
     console.error(error);
@@ -139,7 +157,13 @@ async function classifyEmbeddingFilterTag(
 ): Promise<EmbeddingFilterTag> {
   try {
     const { output } = await generateText({
-      model: openai.chat("gpt-4o"),
+      model: openai.responses("gpt-6-luna"),
+      providerOptions: {
+        openai: {
+          ...responseOptions,
+          reasoningEffort: "none",
+        } satisfies OpenAILanguageModelResponsesOptions,
+      },
       output: Output.object({
         schema: embeddingFilterSchema,
       }),
@@ -171,7 +195,8 @@ async function handleNoteRequest({
   console.log("handleNoteRequest called");
   const tools = noteTools({ userId, embedding, timezone });
   const result = streamText({
-    model: openai.chat("gpt-4o"),
+    model: openai.responses("gpt-6-luna"),
+    providerOptions: answerProviderOptions,
     instructions:
       "This is a system message to ask you to create a response message for the user's query.\n" +
       "Upon user's request to create a note, if user's initial query include both title and content,\n" +
@@ -189,6 +214,8 @@ async function handleNoteRequest({
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
     generateMessageId: generateId,
+    // Client tool outputs must return the encrypted reasoning item as well.
+    sendReasoning: true,
   });
 }
 
@@ -205,7 +232,8 @@ async function handleSalesRecordRequest({
 }) {
   const tools = salesTools({ userId, embedding, timezone });
   const result = streamText({
-    model: openai.chat("gpt-4o"),
+    model: openai.responses("gpt-6-luna"),
+    providerOptions: answerProviderOptions,
     instructions:
       "This is a system message to ask you to create a response message for the user's query.\n" +
       "You can lookup user's sales record but not allowed to create, edit or delete a record\n" +
@@ -219,6 +247,7 @@ async function handleSalesRecordRequest({
   return result.toUIMessageStreamResponse({
     originalMessages: messages,
     generateMessageId: generateId,
+    sendReasoning: true,
   });
 }
 

@@ -22,13 +22,15 @@ export function salesTools({
   return {
     getSalesRecord: tool({
       description: "Get the sales record from the user's query",
+      strict: true,
       inputSchema: z.object({
         daterange: z
           .object({
             from: z.iso.datetime(),
             to: z.iso.datetime(),
           })
-          .optional(),
+          .nullable()
+          .describe("Date range to filter sales, or null for no date filter"),
       }),
       execute: async ({ daterange }) => {
         console.log(
@@ -95,6 +97,7 @@ export function salesTools({
 
     getUserDatetime: tool({
       description: "Get the current datetime",
+      strict: true,
       inputSchema: z.object({}),
       execute: () => {
         const now = new Date();

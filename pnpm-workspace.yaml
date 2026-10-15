@@ -8,3 +8,31 @@ allowBuilds:
 overrides:
   '@types/react': 19.3.0
   '@types/react-dom': 19.3.0
+
+# Keep the 24-hour gate for future updates. These exact releases were selected
+# for the stable upgrade; allow reproducible installs before they age out.
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - '@ai-sdk/gateway@4.0.114'
+  - '@ai-sdk/mcp@2.0.76'
+  - '@ai-sdk/openai@4.0.94'
+  - '@ai-sdk/provider-utils@5.0.60'
+  - '@ai-sdk/react@4.0.145'
+  - '@next/env@16.4.1'
+  - '@next/swc-darwin-arm64@16.4.1'
+  - '@next/swc-darwin-x64@16.4.1'
+  - '@next/swc-linux-arm64-gnu@16.4.1'
+  - '@next/swc-linux-arm64-musl@16.4.1'
+  - '@next/swc-linux-x64-gnu@16.4.1'
+  - '@next/swc-linux-x64-musl@16.4.1'
+  - '@next/swc-win32-arm64-msvc@16.4.1'
+  - '@next/swc-win32-x64-msvc@16.4.1'
+  - '@shadcn/registry@0.1.4'
+  - 'ai@7.0.141'
+  - 'electron-to-chromium@1.5.456'
+  - 'lucide-react@1.57.0'
+  - 'next@16.4.1'
+  - 'qs@6.16.1'
+  - 'react-dom@19.3.1'
+  - 'react@19.3.1'
+  - 'shadcn@4.21.5'

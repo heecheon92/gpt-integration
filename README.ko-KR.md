@@ -51,7 +51,7 @@ Next.js API routes
   └─ /api/chat        AI orchestration route
        ├─ auth boundary
        ├─ UIMessage -> ModelMessage conversion
-       ├─ OpenAI chat model calls
+       ├─ OpenAI Responses API (GPT-6 Luna)
        ├─ OpenAI embeddings
        ├─ Pinecone vector retrieval
        ├─ Prisma user data lookup
@@ -77,7 +77,7 @@ Data layer
 9. 제품 액션이 필요한 요청에서는 assistant가 typed tool을 호출합니다.
 10. `toUIMessageStreamResponse` 스트림을 클라이언트에 반환합니다.
 
-구현은 현재 Vercel AI SDK를 사용하면서도 기존 Chat Completions 스타일 동작을 보존하기 위해 language model 호출에 명시적으로 `openai.chat("gpt-4o")`를 사용합니다. Pinecone 벡터 호환성을 유지하기 위해 임베딩은 `text-embedding-ada-002`를 유지합니다.
+Language model 호출은 `openai.responses("gpt-6-luna")`를 사용합니다. 답변 및 노트/판매 툴 실행에는 `medium`, 세 가지 분류 중 하나를 선택하는 classifier에는 `none` reasoning을 적용합니다. `store: false`로 저장된 response ID에 의존하지 않고 애플리케이션에서 대화 이력을 관리합니다. Reasoning summary는 비활성화하지만, 툴 실행을 이어가기 위한 암호화된 reasoning metadata는 UI message 이력에 유지하며 화면에는 표시하지 않습니다. Pinecone 벡터 호환성을 위해 임베딩은 `text-embedding-ada-002`를 유지합니다.
 
 ## AI tools
 
@@ -122,7 +122,7 @@ assistant는 다음 도메인 툴을 사용할 수 있습니다.
 
 ### Prerequisites
 
-- Node.js 22 이상 (Node.js 24 LTS 권장)
+- Node.js 22.x (`package.json`에서 Vercel 런타임도 고정)
 - `package.json`에 고정된 pnpm 12.11.2
 - MongoDB database
 - Pinecone index
@@ -157,11 +157,16 @@ Prisma는 최신 안정 6.x 릴리스를 사용합니다. 나머지 직접 의�
 릴리스를 사용하며, 설치 버전은 `pnpm-lock.yaml`에 기록됩니다. pnpm 빌드
 권한과 React 타입 override는 `pnpm-workspace.yaml`에서 관리합니다.
 
-pnpm 12는 의존성의 배포 후 경과 시간을 확인합니다. 최신 lockfile 설치 시
-`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`이 발생하면 해당 검사를 통과할 때까지
-기다리세요. 검토한 당일 릴리스를 의도적으로 설치할 때만
-`PNPM_CONFIG_MINIMUM_RELEASE_AGE=0 pnpm install --frozen-lockfile`을 사용하세요.
-이 설정은 해당 명령에만 적용되며 프로젝트의 기본 보호 설정은 유지됩니다.
+pnpm은 배포 후 24시간이 지난 의존성만 설치하도록 제한합니다.
+`pnpm-workspace.yaml`에는 이번 안정 버전 업그레이드의 정확한 버전에 한정한
+예외가 있으며, 전이 의존성과 플랫폼별 패키지도 포함합니다. 따라서 전역
+보호 설정을 끄거나 환경 변수로 우회하지 않고 로컬과 Vercel에서 같은
+lockfile을 설치할 수 있습니다. 새 버전에는 제한이 유지되므로 예외 추가
+시 별도로 검토하세요.
+
+Vercel에서는 Node.js **22.x**, 기본 설치 명령 `pnpm install`, 빌드 명령
+`pnpm build`를 사용합니다. `engines` 설정으로 Node 메이저 버전의 자동 변경을
+막습니다. 위 환경 변수도 배포 환경에 설정해야 합니다.
 
 ### Run locally
 

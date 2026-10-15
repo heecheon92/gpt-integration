@@ -63,11 +63,6 @@ export function AIChatBox({ open, onClose }: AIChatBoxProps) {
       transport: chatTransport,
       sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
       onFinish: ({ message }) => {
-        console.log(
-          "useChat onFinish message: ",
-          JSON.stringify(message, null, 2),
-        );
-
         if (hasCompletedMakeNoteTool(message)) {
           console.log("A note was created by a tool call, refreshing the page");
           router.refresh();
@@ -193,10 +188,6 @@ function ChatMessage({
   const { user } = useUser();
   const isAIMessage = message.role === "assistant";
 
-  if (isAIMessage) {
-    console.log("AI Message: ", JSON.stringify(message, null, 2));
-  }
-
   return (
     <div
       className={cn(
@@ -207,6 +198,9 @@ function ChatMessage({
       {isAIMessage && <Bot size={20} className="mr-2 shrink-0" />}
       {message.parts.map((part, index) => {
         switch (part.type) {
+          case "reasoning":
+            // Preserve encrypted replay metadata in history, not in the UI.
+            return null;
           case "text":
             return (
               <div
